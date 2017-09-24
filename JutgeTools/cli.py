@@ -133,6 +133,8 @@ def main():
             download_parser.error(ex)
         except CompileError as ex:
             compile_parser.error(ex)
+        except TestError as ex:
+            test_parser.error(ex)
         except ProcessError as ex:
             parser.error(ex)
     except AttributeError:
