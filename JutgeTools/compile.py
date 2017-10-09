@@ -12,7 +12,7 @@ def compile(strict=True, compiler='g++'):
     args = [compiler, '-o', cwd.name.split('_')[0] + '.x']
     args += shlex.split('-DNDEBUG -O2 -std=c++11')
     if strict:
-        args += shlex.split('-Wall -Wextra -Werror -Wno-uninitialized '
+        args += shlex.split('-ansi -Wall -Wextra -Werror -Wno-uninitialized '
                             '-Wno-sign-compare -Wshadow')
     
     args += map(lambda f: str(Path(f).resolve()), files)
