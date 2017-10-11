@@ -69,7 +69,7 @@ Successfully installed jutge-tools-1.0
 
 On most systems, you can get root permissions with:
 ```console
-$ sudo pip install https://github.com/vicgua/jutge-tools/archive/master.zip
+$ sudo -H pip install https://github.com/vicgua/jutge-tools/archive/master.zip
 [sudo] password for user:
 ...
 ```

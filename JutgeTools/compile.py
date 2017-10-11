@@ -18,7 +18,7 @@ def compile(strict=True, compiler='g++'):
     args += map(lambda f: str(Path(f).resolve()), files)
 
     try:
-        subprocess.run(args, check=True)
+        subprocess.check_call(args)
     except subprocess.CalledProcessError as ex:
         raise CompileError('compiler exited with status ' +
                            str(ex.returncode))

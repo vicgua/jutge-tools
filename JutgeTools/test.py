@@ -28,8 +28,7 @@ def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
         corfile = inpfile.with_suffix('.cor')
         try:
             inp = inpfile.open('r')
-            out = subprocess.run([str(executable)], stdin=inp,
-                                  stdout=subprocess.PIPE).stdout
+            out = subprocess.check_output([str(executable)], stdin=inp)
             cor = corfile.read_bytes()
             casename = inpfile.with_suffix('').name
             if out == cor:
@@ -40,6 +39,9 @@ def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
                     case=inpfile.with_suffix('').name,
                     out=out, cor=cor
                 ))
+        except subprocess.CalledProcessError as ex:
+            raise TestError('sample exited with non-zero status, stopping: '
+                            + str(ex.returncode))
         finally:
             inp.close()
     

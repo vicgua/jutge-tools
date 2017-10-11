@@ -139,4 +139,3 @@ def main():
             parser.error(ex)
     except AttributeError:
         parser.print_usage()
-        raise
