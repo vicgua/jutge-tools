@@ -9,3 +9,6 @@ class CompileError(ProcessError):
 
 class TestError(ProcessError):
     pass
+
+class SkelError(ProcessError):
+    pass

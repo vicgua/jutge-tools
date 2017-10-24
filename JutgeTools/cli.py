@@ -6,6 +6,9 @@ import pkg_resources
 from .download import _parse_args as download_pa
 from .compile import _parse_args as compile_pa
 from .test import _parse_args as test_pa
+from .skel import _parse_args as skel_pa
+from .shrc import Shells, _parse_args as shrc_pa
+
 from .errors import *
 
 try:
@@ -15,7 +18,7 @@ except:
 
 def main():
     parser = argparse.ArgumentParser(description='Tool for helping with'
-                                                ' Jutge exercices')
+                                                 ' Jutge exercices')
     parser.add_argument(
         '--version',
         action='version',
@@ -44,20 +47,19 @@ def main():
         help='do not delete the archive after deflatting'
     )
 
-    parser_stub_group = download_parser.add_mutually_exclusive_group()
-    parser_stub_group.add_argument(
-        '-s', '--stub-file',
+    parser_skel_group = download_parser.add_mutually_exclusive_group()
+    parser_skel_group.add_argument(
+        '-s', '--skel-files',
         metavar='FILENAME',
-        action='append',
+        nargs='+',
         default=[],
-        help='create stub file with these name.'
-             ' May be specified more than once',
+        help='create skel files with these names',
     )
-    parser_stub_group.add_argument(
-        '-S', '--no-stub',
+    parser_skel_group.add_argument(
+        '-S', '--no-skel',
         action='store_false',
-        dest='stub',
-        help='do not create a stub file'
+        dest='skel',
+        help='do not create a skel file'
     )
 
     # `compile` parser
@@ -71,14 +73,20 @@ def main():
     compile_parser.add_argument(
         '--no-strict',
         action='store_false',
-        dest='strict'
+        dest='strict',
+        help='do not use strict flags'
     )
 
     compile_parser.add_argument(
-        'compiler',
-        nargs='?',
+        '-c', '--compiler',
         default='g++',
         help='compiler to be used. Must support g++-like flags. Default: g++'
+    )
+
+    compile_parser.add_argument(
+        'source',
+        nargs='*',
+        help='if specified, only these files will be compiled'
     )
 
     test_parser = subparsers.add_parser(
@@ -122,6 +130,56 @@ def main():
         help='diff tool to use. "$output" and "$correct" will be substituted '
              ' (they are already quoted).'
              ' Default: `diff -y -l $output $correct`'
+    )
+
+    skel_parser = subparsers.add_parser(
+        'skel',
+        description='Create a skeleton file structure',
+        help='create a skeleton file structure'
+    )
+    skel_parser.set_defaults(action=skel_pa)
+
+    skel_parser.add_argument(
+        '-d', '--dest',
+        default=None,
+        help='destination folder'
+    )
+    skel_parser.add_argument(
+        '-f', '--files',
+        nargs='+',
+        metavar='FILE',
+        default=None,
+        help='files to create. Default: main.cc',
+    )
+
+    shrc_parser = subparsers.add_parser(
+        'shrc',
+        description='Set up shell for development. The output of this command'
+                    ' should be appended to your config file',
+        help='set up shell for development'
+    )
+    shrc_parser.set_defaults(action=shrc_pa)
+
+    shrc_parser.add_argument(
+        '-I', '--no-info',
+        action='store_false',
+        dest='info',
+        help='do not show help to install aliases'
+    )
+
+    shrc_parser.add_argument(
+        '-c', '--compiler',
+        default='g++',
+        help='change base compiler for p1++. Must support g++-like flags.'
+             ' Default: g++'
+    )
+
+    shrc_parser.add_argument(
+        '-s', '--shell',
+        required=True,
+        choices=Shells,
+        type=Shells.get,
+        help='shell for which a config format should be output'
     )
 
     args = parser.parse_args()

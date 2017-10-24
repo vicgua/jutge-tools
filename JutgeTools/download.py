@@ -2,18 +2,8 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from pathlib import Path
 from zipfile import ZipFile, BadZipfile
-from textwrap import dedent
 from .errors import DownloadError
-
-template = '''\
-    #include <iostream>
-
-    using namespace std;
-
-    int main() {
-        // Code
-    }
-    '''
+from .skel import skel
 
 def _download(exercise):
     url = "https://jutge.org/problems/{}/zip".format(exercise)
@@ -33,10 +23,7 @@ def _download(exercise):
             orig.close()
 
 
-def download(exercise, keep_zip=False, stub_files=-1):
-    if stub_files == -1 or stub_files == []:
-        stub_files = [exercise.split('_')[0] + '.cc']
-
+def download(exercise, keep_zip=False, skel_files=-1):
     cwd = Path.cwd()
     zipf = cwd / (exercise + '.zip')
     
@@ -67,20 +54,20 @@ def download(exercise, keep_zip=False, stub_files=-1):
         print('Removing zip file')
         zipf.unlink()
     
-    if stub_files is None:
+    if skel_files is None:
         return
 
-    print('Creating stub files')
-    for s in stub_files:
-        s_path = cwd / exercise / s
-        s_path.write_text(dedent(template))
+    print('Creating skel files')
+    if skel_files == -1 or not skel_files:
+        skel_files = None
+    skel(exercise, skel_files)
 
 
 def _parse_args(args):
     d = {
         'exercise': args.exercise,
         'keep_zip': args.keep_zip,
-        'stub_files': args.stub_file if args.stub else None
+        'skel_files': args.skel_files if args.skel else None
     }
 
     def exc():

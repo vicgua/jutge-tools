@@ -3,19 +3,22 @@ import shlex
 import subprocess
 from .errors import CompileError
 
-def compile(strict=True, compiler='g++'):
+COMPILE_FLAGS = ('-ansi -Wall -Wextra -Werror -Wno-uninitialized'
+                 ' -Wno-sign-compare -Wshadow')
+
+def compile(strict=True, compiler='g++', sources=''):
     print('Compiling...')
     cwd = Path.cwd()
-    files = map(lambda x: x.name, cwd.glob('*.cc'))
-    if not files:
+    if not sources:
+        sources = map(lambda x: x.name, cwd.glob('*.cc'))
+    if not sources:
         raise CompileError('no C++ files (must end in .cc)')
     args = [compiler, '-o', cwd.name.split('_')[0] + '.x']
     args += shlex.split('-DNDEBUG -O2 -std=c++11')
     if strict:
-        args += shlex.split('-ansi -Wall -Wextra -Werror -Wno-uninitialized '
-                            '-Wno-sign-compare -Wshadow')
+        args += shlex.split(COMPILE_FLAGS)
     
-    args += map(lambda f: str(Path(f).resolve()), files)
+    args += map(lambda f: str(Path(f).resolve()), sources)
 
     try:
         subprocess.check_call(args)
@@ -24,13 +27,15 @@ def compile(strict=True, compiler='g++'):
                            str(ex.returncode))
     except FileNotFoundError:
         raise CompileError(compiler +
-                           ' not installed; try specifying a compiler')
+                           ' not installed; try specifying a different'
+                           ' compiler')
     print('Compiled successfully')
 
 def _parse_args(args):
     d = {
         'strict': args.strict,
-        'compiler': args.compiler
+        'compiler': args.compiler,
+        'sources': args.source
     }
 
     def exc():

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='jutge-tools',
-    version='1.0.1',
+    version='1.1.0',
     packages=find_packages(),
     python_requires='~=3.4',
     entry_points={
