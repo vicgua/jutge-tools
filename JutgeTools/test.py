@@ -29,7 +29,9 @@ def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
         try:
             inp = inpfile.open('r')
             out = subprocess.check_output([str(executable)], stdin=inp)
-            cor = corfile.read_bytes()
+            #cor = corfile.read_bytes()
+            with corfile.open('rb') as corobj:
+                cor = corobj.read()
             casename = inpfile.with_suffix('').name
             if out == cor:
                 print(casename + ' passed')
@@ -68,7 +70,7 @@ def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
         correct=shlex.quote(str(all_correct))
     )
 
-    subprocess.run(diff_command, shell=True)
+    subprocess.call(diff_command, shell=True)
 
     all_output.unlink()
     all_correct.unlink()

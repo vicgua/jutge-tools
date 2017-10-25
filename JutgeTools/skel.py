@@ -5,10 +5,10 @@ from .file_templates import *
 def skel(dirname=None, files=None):
     if dirname is not None:
         dest = Path.cwd() / dirname
-        try:
-            dest.mkdir(exist_ok=True)
-        except FileExistsError:
+        if dest.exists() and not dest.is_dir():
             raise SkelError(dirname + ' already exists and is not a dir')
+        elif not dest.exists():
+            dest.mkdir()
     else:
         dest = Path.cwd()
     if files is None:
@@ -26,7 +26,8 @@ def skel(dirname=None, files=None):
             text = main_template()
         else:
             text = source_no_header_template()
-        f_path.write_text(text)
+        with f_path.open('w') as fobj:
+            fobj.write(text)
 
 def _parse_args(args):
     d = {

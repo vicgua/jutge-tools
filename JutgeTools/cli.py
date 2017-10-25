@@ -89,6 +89,7 @@ def main():
         help='if specified, only these files will be compiled'
     )
 
+    # `test` parser
     test_parser = subparsers.add_parser(
         'test', aliases=['t'],
         description='Test the exercise in the current dir and show the diff'
@@ -132,6 +133,7 @@ def main():
              ' Default: `diff -y -l $output $correct`'
     )
 
+    # `skel` parser
     skel_parser = subparsers.add_parser(
         'skel',
         description='Create a skeleton file structure',
@@ -152,6 +154,7 @@ def main():
         help='files to create. Default: main.cc',
     )
 
+    # `shrc` parser
     shrc_parser = subparsers.add_parser(
         'shrc',
         description='Set up shell for development. The output of this command'
@@ -185,15 +188,16 @@ def main():
     args = parser.parse_args()
     try:
         fn = args.action(args)
-        try:
-            fn()
-        except DownloadError as ex:
-            download_parser.error(ex)
-        except CompileError as ex:
-            compile_parser.error(ex)
-        except TestError as ex:
-            test_parser.error(ex)
-        except ProcessError as ex:
-            parser.error(ex)
     except AttributeError:
         parser.print_usage()
+        return
+    try:
+        fn()
+    except DownloadError as ex:
+        download_parser.error(ex)
+    except CompileError as ex:
+        compile_parser.error(ex)
+    except TestError as ex:
+        test_parser.error(ex)
+    except ProcessError as ex:
+        parser.error(ex)
