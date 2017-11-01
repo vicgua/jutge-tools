@@ -4,10 +4,11 @@ import argparse
 import pkg_resources
 
 from .download import _parse_args as download_pa
-from .compile import _parse_args as compile_pa
+from .compilef import _parse_args as compile_pa
 from .test import _parse_args as test_pa
 from .skel import _parse_args as skel_pa
 from .shrc import Shells, _parse_args as shrc_pa
+from .debug import _parse_args as debug_pa
 
 from .errors import *
 
@@ -89,6 +90,13 @@ def main():
     )
 
     compile_parser.add_argument(
+        '--no-debug',
+        action='store_false',
+        dest='debug',
+        help='do not include debugging symbols (and add -DNDEBUG -O2)'
+    )
+
+    compile_parser.add_argument(
         'source',
         nargs='*',
         help='if specified, only these files will be compiled'
@@ -124,6 +132,13 @@ def main():
         help='compile with the --no-strict flag'
     )
 
+    test_parser.add_argument(
+        '--no-debug',
+        action='store_false',
+        dest='debug',
+        help='test with -DNDEBUG (no effect with --no-compile)'
+    )
+
     test_diff_group = test_parser.add_mutually_exclusive_group()
     test_diff_group.add_argument(
         '-D', '--no-diff',
@@ -136,6 +151,29 @@ def main():
         help='diff tool to use. "$output" and "$correct" will be substituted '
              ' (they are already quoted).'
              ' Default: `diff -y -l $output $correct`'
+    )
+
+    # `debug` parser
+    debug_parser = subparsers.add_parser(
+        'debug',
+        description='Start a debugger attached to the executable',
+        help='run on a debugger'
+    )
+    debug_parser.set_defaults(action=debug_pa)
+    
+    debug_parser.add_argument(
+        '-d', '--debugger',
+        default=None,
+        help='debbugger to be used. "$exe" will be substituted '
+             ' (it is already quoted).'
+             ' Default: `gdb -tui $exe`'
+    )
+    
+    debug_parser.add_argument(
+        '--no-strict',
+        action='store_false',
+        dest='strict',
+        help='compile with the --no-strict flag'
     )
 
     # `skel` parser

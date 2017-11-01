@@ -3,10 +3,11 @@ from pathlib import Path
 import subprocess
 from collections import namedtuple
 import shlex
-from .compile import compile as compiler
+from .compilef import compilef
 from .errors import TestError, CompileError
 
-def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
+def test(cases=None, compile=True, strict=True, debug=True, diff=True,
+         diff_tool=None):
     if diff_tool is None:
         diff_tool = 'diff -y $output $correct'
     diff_tpl = Template(diff_tool)
@@ -15,7 +16,7 @@ def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
     executable = cwd / (cwd.name.split('_')[0] + '.x')
     if compile or not executable.exists():
         try:
-            compiler(strict)
+            compilef(strict=strict, debug=debug)
         except CompileError as ex:
             raise TestError(ex) from ex
     assert(executable.exists())
@@ -65,10 +66,13 @@ def test(cases=None, compile=True, strict=True, diff=True, diff_tool=None):
         out.close()
         cor.close()
 
-    diff_command = diff_tpl.substitute(
-        output=shlex.quote(str(all_output)),
-        correct=shlex.quote(str(all_correct))
-    )
+    try:
+        diff_command = diff_tpl.substitute(
+            output=shlex.quote(str(all_output)),
+            correct=shlex.quote(str(all_correct))
+        )
+    except KeyError as ex:
+        raise TestError('{} is not a valid variable'.format(ex))
 
     subprocess.call(diff_command, shell=True)
 
@@ -81,6 +85,7 @@ def _parse_args(args):
         'cases': args.case,
         'compile': args.compile,
         'strict': args.strict,
+        'debug': args.debug,
         'diff': args.diff,
         'diff_tool': args.diff_tool
     }

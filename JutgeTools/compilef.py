@@ -6,7 +6,8 @@ from .errors import CompileError
 COMPILE_FLAGS = ('-ansi -Wall -Wextra -Werror -Wno-uninitialized'
                  ' -Wno-sign-compare -Wshadow')
 
-def compile(strict=True, compiler='g++', sources=''):
+# Avoid clash with built-in "compile"
+def compilef(strict=True, debug=True, compiler='g++', sources=''):
     print('Compiling...')
     cwd = Path.cwd()
     if not sources:
@@ -14,9 +15,15 @@ def compile(strict=True, compiler='g++', sources=''):
     if not sources:
         raise CompileError('no C++ files (must end in .cc)')
     args = [compiler, '-o', cwd.name.split('_')[0] + '.x']
-    args += shlex.split('-DNDEBUG -O2 -std=c++11')
+    if debug:
+        args += shlex.split('-g -O2')
+    else:
+        args += shlex.split('-DNDEBUG -O2')
+
     if strict:
         args += shlex.split(COMPILE_FLAGS)
+    else:
+        args += shlex.split('-ansi')
     
     args += map(lambda f: str(Path(f).resolve()), sources)
 
@@ -34,10 +41,11 @@ def compile(strict=True, compiler='g++', sources=''):
 def _parse_args(args):
     d = {
         'strict': args.strict,
+        'debug': args.debug,
         'compiler': args.compiler,
         'sources': args.source
     }
 
     def exc():
-        return compile(**d)
+        return compilef(**d)
     return exc

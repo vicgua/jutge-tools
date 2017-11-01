@@ -1,7 +1,7 @@
 from enum import Enum
 from shlex import quote
 from sys import stderr
-from .compile import COMPILE_FLAGS
+from .compilef import COMPILE_FLAGS
 
 class Shells(Enum):
     BASH = 1
@@ -16,24 +16,24 @@ class Shells(Enum):
     def __str__(self):
         return self.name.lower()
 
-def _bash(info=True):
+def _bash(info=True, **_):
     if info:
         print('Append the following to ~/.bashrc:', file=stderr)
     print('alias p1++=', end='')
     print(quote('g++ ' + COMPILE_FLAGS))
 
-def _tcsh(info=True):
+def _tcsh(info=True, **_):
     if info:
         print('Append the following to ~/.bashrc:', file=stderr)
     print('alias p1++ g++ ' + COMPILE_FLAGS)
 
-def _zsh(info=True):
+def _zsh(info=True, **_):
     if info:
         print('Append the following to ~/.zshrc:', file=stderr)
     print('alias p1++=', end='')
     print(quote('g++ ' + COMPILE_FLAGS))
 
-def _fish(info=True):
+def _fish(info=True, **_):
     if info:
         print('Append the following to ~/.config/fish/config.fish:',
               file=stderr)

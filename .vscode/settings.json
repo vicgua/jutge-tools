@@ -3,5 +3,6 @@
         80
     ],
     "python.linting.pylintEnabled": false,
+    "python.pythonPath": "${workspaceRoot}/venv/bin/python",
     "editor.renderWhitespace": "boundary"
 }
