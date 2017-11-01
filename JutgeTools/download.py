@@ -22,8 +22,26 @@ def _download(exercise):
         finally:
             orig.close()
 
+def _download_cpp(exercise):
+    url = "https://jutge.org/problems/{}/main/cc".format(exercise)
+    print('Downloading ' + url)
+    path = Path.cwd() / exercise / 'main.cc'
+    with path.open('wb') as dest:
+        try:
+            orig = urlopen(url)
+            data = orig.read(128)
+            while data:
+                dest.write(data)
+                data = orig.read(128)
+        except HTTPError as ex:
+            raise DownloadError('download failed with code {} {}'.format(
+                ex.code, ex.reason
+            ))
+        finally:
+            orig.close()
 
-def download(exercise, keep_zip=False, skel_files=-1):
+
+def download(exercise, keep_zip=False, cc=False, skel_files=-1):
     cwd = Path.cwd()
     zipf = cwd / (exercise + '.zip')
     
@@ -54,6 +72,10 @@ def download(exercise, keep_zip=False, skel_files=-1):
         print('Removing zip file')
         zipf.unlink()
     
+    if cc:
+        _download_cpp(exercise)
+        return
+
     if skel_files is None:
         return
 
@@ -67,6 +89,7 @@ def _parse_args(args):
     d = {
         'exercise': args.exercise,
         'keep_zip': args.keep_zip,
+        'cc': args.cc,
         'skel_files': args.skel_files if args.skel else None
     }
 

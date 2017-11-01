@@ -56,6 +56,11 @@ def main():
         help='create skel files with these names',
     )
     parser_skel_group.add_argument(
+        '--cc',
+        action='store_true',
+        help='download .cc file attached to the problem'
+    )
+    parser_skel_group.add_argument(
         '-S', '--no-skel',
         action='store_false',
         dest='skel',
