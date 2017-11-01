@@ -1,6 +1,6 @@
 from pathlib import Path
-from .errors import SkelError
-from .file_templates import *
+from ._aux.errors import SkelError
+from ._aux.file_templates import *
 
 def skel(dirname=None, files=None):
     if dirname is not None:

@@ -2,7 +2,7 @@ from string import Template
 from pathlib import Path
 import subprocess
 import shlex
-from .errors import DebugError
+from ._aux.errors import DebugError, CompileError
 from .compilef import compilef
 
 def debug(debugger=None, compile=True, strict=True):

@@ -24,7 +24,7 @@ def _bash(info=True, **_):
 
 def _tcsh(info=True, **_):
     if info:
-        print('Append the following to ~/.bashrc:', file=stderr)
+        print('Append the following to ~/.tcshrc:', file=stderr)
     print('alias p1++ g++ ' + COMPILE_FLAGS)
 
 def _zsh(info=True, **_):

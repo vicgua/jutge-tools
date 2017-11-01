@@ -1,7 +1,7 @@
 from pathlib import Path
 import shlex
 import subprocess
-from .errors import CompileError
+from ._aux.errors import CompileError
 
 COMPILE_FLAGS = ('-ansi -Wall -Wextra -Werror -Wno-uninitialized'
                  ' -Wno-sign-compare -Wshadow')

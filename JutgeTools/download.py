@@ -2,7 +2,7 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from pathlib import Path
 from zipfile import ZipFile, BadZipfile
-from .errors import DownloadError
+from ._aux.errors import DownloadError
 from .skel import skel
 
 def _download(exercise):

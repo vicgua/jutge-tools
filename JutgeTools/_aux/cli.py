@@ -3,12 +3,12 @@
 import argparse
 import pkg_resources
 
-from .download import _parse_args as download_pa
-from .compilef import _parse_args as compile_pa
-from .test import _parse_args as test_pa
-from .skel import _parse_args as skel_pa
-from .shrc import Shells, _parse_args as shrc_pa
-from .debug import _parse_args as debug_pa
+from ..download import _parse_args as download_pa
+from ..compilef import _parse_args as compile_pa
+from ..test import _parse_args as test_pa
+from ..skel import _parse_args as skel_pa
+from ..shrc import Shells, _parse_args as shrc_pa
+from ..debug import _parse_args as debug_pa
 
 from .errors import *
 

@@ -4,7 +4,7 @@ import subprocess
 from collections import namedtuple
 import shlex
 from .compilef import compilef
-from .errors import TestError, CompileError
+from ._aux.errors import TestError, CompileError
 
 def test(cases=None, compile=True, strict=True, debug=True, diff=True,
          diff_tool=None):
