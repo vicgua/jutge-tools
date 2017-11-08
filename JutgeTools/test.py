@@ -25,12 +25,10 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
     failed_cases = []
 
     for inpfile in sorted(cwd.glob('*.inp')):
-        #outfile = inpfile.with_suffix('.out')
         corfile = inpfile.with_suffix('.cor')
         try:
             inp = inpfile.open('r')
             out = subprocess.check_output([str(executable)], stdin=inp)
-            #cor = corfile.read_bytes()
             with corfile.open('rb') as corobj:
                 cor = corobj.read()
             casename = inpfile.with_suffix('').name
@@ -56,6 +54,8 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
     try:
         out = all_output.open('wb')
         cor = all_correct.open('wb')
+        out.write('## OUTPUT ##\n'.encode('utf-8'))
+        cor.write('## CORRECT ##\n'.encode('utf-8'))
         
         for fc in failed_cases:
             out.write('\n# {} #\n'.format(fc.case).encode('utf-8'))
