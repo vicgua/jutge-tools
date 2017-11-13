@@ -7,7 +7,7 @@ def genconfig(config, compiler, diff_tool, debugger):
     if diff_tool:
         config['diff_tool'] = diff_tool
     else:
-        config['diff_tool'] = 'diff -y -l $output $correct'
+        config['diff_tool'] = 'diff -y $output $correct'
 
     if debugger:
         config['debugger'] = debugger

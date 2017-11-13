@@ -154,7 +154,7 @@ def main():
         '-d', '--diff-tool',
         help='diff tool to use. "$output" and "$correct" will be substituted '
              ' (they are already quoted).'
-             ' Default: `diff -y -l $output $correct`'
+             ' Default: `diff -y $output $correct`'
     )
 
     # `debug` parser
