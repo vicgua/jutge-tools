@@ -1,1 +1,9 @@
-__all__ = ['compilef', 'debug', 'download', 'shrc', 'skel', 'test']
+__all__ = [
+    'compilef',
+    'debug',
+    'download',
+    'genconfig',
+    'shrc',
+    'skel',
+    'test'
+]

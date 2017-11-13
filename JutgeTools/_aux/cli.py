@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import argparse
 import pkg_resources
 
@@ -9,8 +7,10 @@ from ..test import _parse_args as test_pa
 from ..skel import _parse_args as skel_pa
 from ..shrc import Shells, _parse_args as shrc_pa
 from ..debug import _parse_args as debug_pa
+from ..genconfig import _parse_args as genconfig_pa
 
 from .errors import *
+from .config_file import ConfigFile
 
 try:
     version = pkg_resources.require("jutge-tools")[0].version
@@ -24,6 +24,11 @@ def main():
         '--version',
         action='version',
         version='%(prog)s {}'.format(version)
+    )
+    parser.add_argument(
+        '--config',
+        help='configuration file. Best used as an alias (see `shrc`)',
+        default=None
     )
     subparsers = parser.add_subparsers(
         title='actions'
@@ -85,7 +90,6 @@ def main():
 
     compile_parser.add_argument(
         '-c', '--compiler',
-        default='g++',
         help='compiler to be used. Must support g++-like flags. Default: g++'
     )
 
@@ -160,15 +164,14 @@ def main():
         help='run on a debugger'
     )
     debug_parser.set_defaults(action=debug_pa)
-    
+
     debug_parser.add_argument(
         '-d', '--debugger',
-        default=None,
         help='debbugger to be used. "$exe" will be substituted '
              ' (it is already quoted).'
              ' Default: `gdb -tui $exe`'
     )
-    
+
     debug_parser.add_argument(
         '--no-strict',
         action='store_false',
@@ -186,7 +189,6 @@ def main():
 
     skel_parser.add_argument(
         '-d', '--dest',
-        default=None,
         help='destination folder'
     )
     skel_parser.add_argument(
@@ -215,7 +217,6 @@ def main():
 
     shrc_parser.add_argument(
         '-c', '--compiler',
-        default='g++',
         help='change base compiler for p1++. Must support g++-like flags.'
              ' Default: g++'
     )
@@ -228,9 +229,32 @@ def main():
         help='shell for which a config format should be output'
     )
 
+    genconfig_parser = subparsers.add_parser(
+        'genconfig',
+        description='Generate or update a config file and write it to'
+                    ' the location specified by --config',
+        help='generate or update a config file'
+    )
+    genconfig_parser.add_argument(
+        '-c', '--compiler',
+        help='compiler to be used. Must support g++-like flags'
+    )
+    genconfig_parser.add_argument(
+        '-diff', '--diff-tool',
+        help='diff tool to use. "$output" and "$correct" will be substituted '
+             ' (they are already quoted)'
+    )
+    genconfig_parser.add_argument(
+        '-dbg', '--debugger',
+        help='debbugger to be used. "$exe" will be substituted '
+             ' (it is already quoted)'
+    )
+    genconfig_parser.set_defaults(action=genconfig_pa)
+
     args = parser.parse_args()
     try:
-        fn = args.action(args)
+        config = ConfigFile(args)
+        fn = args.action(config)
     except AttributeError:
         parser.print_usage()
         return

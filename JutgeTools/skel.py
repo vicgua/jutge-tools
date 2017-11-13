@@ -13,7 +13,7 @@ def skel(dirname=None, files=None):
         dest = Path.cwd()
     if files is None:
         files = ['main.cc']
-    
+
     for f in files:
         f_path = dest / f
         if f_path.suffix == '.hh':
@@ -29,10 +29,10 @@ def skel(dirname=None, files=None):
         with f_path.open('w') as fobj:
             fobj.write(text)
 
-def _parse_args(args):
+def _parse_args(config):
     d = {
-        'dirname': args.dest,
-        'files': args.files
+        'dirname': config.get('dest'),
+        'files': config.get('files')
     }
 
     def exc():

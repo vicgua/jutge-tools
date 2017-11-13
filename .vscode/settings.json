@@ -5,5 +5,7 @@
     "python.linting.pylintEnabled": false,
     "python.pythonPath": "${workspaceRoot}/venv/bin/python",
     "editor.renderWhitespace": "boundary",
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+    "editor.trimAutoWhitespace": true,
+    "files.trimTrailingWhitespace": true
 }

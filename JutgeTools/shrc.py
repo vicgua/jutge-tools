@@ -1,6 +1,6 @@
 from enum import Enum
 from shlex import quote
-from sys import stderr
+import sys
 from .compilef import COMPILE_FLAGS
 
 class Shells(Enum):
@@ -16,29 +16,41 @@ class Shells(Enum):
     def __str__(self):
         return self.name.lower()
 
-def _bash(info=True, **_):
+def _bash(info=True, config=None, **_):
     if info:
-        print('Append the following to ~/.bashrc:', file=stderr)
+        print('Append the following to ~/.bashrc:', file=sys.stderr)
     print('alias p1++=', end='')
     print(quote('g++ ' + COMPILE_FLAGS))
+    if config is not None:
+        print('alias jutge-tools=', end='')
+        print(quote('jutge-tools --config ' + config))
 
-def _tcsh(info=True, **_):
+def _tcsh(info=True, config=None, **_):
     if info:
-        print('Append the following to ~/.tcshrc:', file=stderr)
+        print('Append the following to ~/.tcshrc:', file=sys.stderr)
     print('alias p1++ g++ ' + COMPILE_FLAGS)
+    if config is not None:
+        print('alias jutge-tools ', end='')
+        print('jutge-tools --config ' + config)
 
-def _zsh(info=True, **_):
+def _zsh(info=True, config=None, **_):
     if info:
-        print('Append the following to ~/.zshrc:', file=stderr)
+        print('Append the following to ~/.zshrc:', file=sys.stderr)
     print('alias p1++=', end='')
     print(quote('g++ ' + COMPILE_FLAGS))
+    if config is not None:
+        print('alias jutge-tools=', end='')
+        print(quote('jutge-tools --config ' + config))
 
-def _fish(info=True, **_):
+def _fish(info=True, config=None, **_):
     if info:
         print('Append the following to ~/.config/fish/config.fish:',
-              file=stderr)
+              file=sys.stderr)
     print('alias p1++=', end='')
     print(quote('g++ ' + COMPILE_FLAGS))
+    if config is not None:
+        print('alias jutge-tools=', end='')
+        print(quote('jutge-tools --config ' + config))
 
 
 def shrc(shell, **kwargs):
@@ -51,11 +63,12 @@ def shrc(shell, **kwargs):
     actions[shell](**kwargs)
 
 
-def _parse_args(args):
+def _parse_args(config):
     d = {
-        'shell': args.shell,
-        'info': args.info,
-        'compiler': args.compiler
+        'shell': config['shell'],
+        'info': config.getboolean('info', True),
+        'compiler': config.get('compiler', 'g++'),
+        'config': str(config.file)
     }
 
     def exc():

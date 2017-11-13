@@ -45,7 +45,7 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
                             + str(ex.returncode))
         finally:
             inp.close()
-    
+
     if not failed_cases:
         return
 
@@ -56,7 +56,7 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
         cor = all_correct.open('wb')
         out.write('## OUTPUT ##\n'.encode('utf-8'))
         cor.write('## CORRECT ##\n'.encode('utf-8'))
-        
+
         for fc in failed_cases:
             out.write('\n# {} #\n'.format(fc.case).encode('utf-8'))
             out.write(fc.out)
@@ -74,20 +74,21 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
     except KeyError as ex:
         raise TestError('{} is not a valid variable'.format(ex))
 
+    print('> ' + diff_command)
     subprocess.call(diff_command, shell=True)
 
     all_output.unlink()
     all_correct.unlink()
-        
 
-def _parse_args(args):
+
+def _parse_args(config):
     d = {
-        'cases': args.case,
-        'compile': args.compile,
-        'strict': args.strict,
-        'debug': args.debug,
-        'diff': args.diff,
-        'diff_tool': args.diff_tool
+        'cases': config['case'],
+        'compile': config.getboolean('compile', True),
+        'strict': config.getboolean('strict', True),
+        'debug': config.getboolean('debug', True),
+        'diff': config.getboolean('diff', True),
+        'diff_tool': config.get('diff_tool')
     }
 
     def exc():

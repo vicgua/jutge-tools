@@ -44,7 +44,7 @@ def _download_cpp(exercise):
 def download(exercise, keep_zip=False, cc=False, skel_files=-1):
     cwd = Path.cwd()
     zipf = cwd / (exercise + '.zip')
-    
+
     if zipf.exists():
         print(exercise + '.zip exists, skipping download')
         zip_downloaded = False
@@ -52,7 +52,7 @@ def download(exercise, keep_zip=False, cc=False, skel_files=-1):
         _download(exercise)
         zip_downloaded = True
     assert zipf.exists()
-    
+
     if (cwd / exercise).exists():
         print('dir "{}" already exists, skipping unzip'.format(exercise))
     else:
@@ -65,13 +65,13 @@ def download(exercise, keep_zip=False, cc=False, skel_files=-1):
             raise DownloadError(zipf.name + ' is not a valid zip file.' +
                                 ' This may be because exercise does not ' +
                                 ' exists or because the download failed')
-    
+
     assert (cwd / exercise).exists()
 
     if not keep_zip:
         print('Removing zip file')
         zipf.unlink()
-    
+
     if cc:
         _download_cpp(exercise)
         return
@@ -85,12 +85,14 @@ def download(exercise, keep_zip=False, cc=False, skel_files=-1):
     skel(exercise, skel_files)
 
 
-def _parse_args(args):
+def _parse_args(config):
     d = {
-        'exercise': args.exercise,
-        'keep_zip': args.keep_zip,
-        'cc': args.cc,
-        'skel_files': args.skel_files if args.skel else None
+        'exercise': config['exercise'],
+        'keep_zip': config.getboolean('keep_zip', False),
+        'cc': config.getboolean('cc', False),
+        #'skel_files': args.skel_files if args.skel else None
+        'skel_files': (config['skel_files']
+            if config.getboolean('skel') else None)
     }
 
     def exc():

@@ -26,12 +26,13 @@ def debug(debugger=None, compile=True, strict=True):
     except KeyError as ex:
         raise DebugError('{} is not a valid variable'.format(ex))
     print('Starting debugger')
+    print('> ' + debugger_cmd)
     subprocess.call(debugger_cmd, shell=True)
 
-def _parse_args(args):
+def _parse_args(config):
     d = {
-        'debugger': args.debugger,
-        'strict': args.strict
+        'debugger': config.get('debugger', None),
+        'strict': config.getboolean('strict', True)
     }
 
     def exc():
