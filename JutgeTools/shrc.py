@@ -68,7 +68,8 @@ def _parse_args(config):
         'shell': config['shell'],
         'info': config.getboolean('info', True),
         'compiler': config.get('compiler', 'g++'),
-        'config': str(config.file)
+        # Do not convert to string if not set
+        'config': str(config.file) if config.file is not None else None
     }
 
     def exc():
