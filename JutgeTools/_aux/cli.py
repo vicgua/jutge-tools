@@ -1,5 +1,6 @@
 import argparse
 import pkg_resources
+import sys
 
 from ..download import _parse_args as download_pa
 from ..compilef import _parse_args as compile_pa
@@ -209,16 +210,31 @@ def main():
     shrc_parser.set_defaults(action=shrc_pa)
 
     shrc_parser.add_argument(
-        '-I', '--no-info',
-        action='store_false',
-        dest='info',
+        '-q', '--quiet',
+        action='store_true',
+        dest='quiet',
         help='do not show help to install aliases'
     )
 
-    shrc_parser.add_argument(
+    p1_group = shrc_parser.add_mutually_exclusive_group()
+    p1_group.add_argument(
         '-c', '--compiler',
         help='change base compiler for p1++. Must support g++-like flags.'
              ' Default: g++'
+    )
+    p1_group.add_argument(
+        '--no-p1++-alias',
+        action='store_false',
+        dest='p1_alias',
+        help='do not add an alias for p1++'
+    )
+
+    shrc_parser.add_argument(
+        '--alias',
+        help='with config, set the name that will be aliased to '
+             ' {name} --config (config). By default, {name}'.format(
+                name=sys.argv[0]
+            )
     )
 
     shrc_parser.add_argument(
@@ -252,12 +268,14 @@ def main():
     genconfig_parser.set_defaults(action=genconfig_pa)
 
     args = parser.parse_args()
+    if 'action' not in args:
+        parser.print_usage()
+        return
     try:
         config = ConfigFile(args)
         fn = args.action(config)
     except AttributeError:
-        parser.print_usage()
-        return
+        raise
     try:
         fn()
     except DownloadError as ex:
