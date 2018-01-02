@@ -1,6 +1,7 @@
 import argparse
 import pkg_resources
 import sys
+import os.path
 
 from ..download import _parse_args as download_pa
 from ..compilef import _parse_args as compile_pa
@@ -210,6 +211,14 @@ def main():
     shrc_parser.set_defaults(action=shrc_pa)
 
     shrc_parser.add_argument(
+        '-s', '--shell',
+        required=True,
+        choices=Shells,
+        type=Shells.get,
+        help='shell for which a config format should be output'
+    )
+
+    shrc_parser.add_argument(
         '-q', '--quiet',
         action='store_true',
         dest='quiet',
@@ -233,16 +242,13 @@ def main():
         '--alias',
         help='with config, set the name that will be aliased to '
              ' {name} --config (config). By default, {name}'.format(
-                name=sys.argv[0]
+                name=os.path.basename(sys.argv[0])
             )
     )
 
     shrc_parser.add_argument(
-        '-s', '--shell',
-        required=True,
-        choices=Shells,
-        type=Shells.get,
-        help='shell for which a config format should be output'
+        '--dlalias',
+        help='set an alias that will download and cd into a problem'
     )
 
     genconfig_parser = subparsers.add_parser(

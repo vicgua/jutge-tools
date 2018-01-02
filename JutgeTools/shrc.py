@@ -2,6 +2,7 @@ from enum import Enum
 from shlex import quote
 import sys
 import os.path
+from textwrap import dedent as _dedent
 from .compilef import COMPILE_FLAGS
 
 class Shells(Enum):
@@ -30,17 +31,52 @@ _SHELL_CONFIGS = {
     Shells.FISH: '~/.config/fish/config.fish'
 }
 
+def _dl_function(shell):
+    if shell in (Shells.BASH, Shells.ZSH):
+        s = '''\
+            # Download a Jutge problem and change to it
+            %(fname)s () {
+                %(jt)s download $@ && cd $(%(jt)s dl --get-dest $@)
+            }
+            '''
+    elif shell == Shells.TCSH:
+        s = '''\
+            : Download a Jutge problem and change to it
+            alias %(fname)s '%(jt)s download \\!* && cd `%(jt)s --get-dest \\!*`
+            '''
+    elif shell == Shells.FISH:
+        s = '''\
+            function %(fname)s --description \\
+                '# Download a Jutge problem and change to it'
+                %(jt)s download $argv; and cd (%(jt)s dl --get-dest $argv)
+            end
+            '''
+    return _dedent(s)
+
+def _header(shell, comment):
+    if shell in (Shells.BASH, Shells.ZSH, Shells.FISH):
+        return '### {} ###'.format(comment)
+    elif shell == Shells.TCSH:
+        # The second of each is a semicolon, because tcsh's comment is a SINGLE
+        # semicolon
+        return ':;: {} :;:'.format(comment)
+
 def shrc(shell, quiet=False, alias=None, p1_alias=True, config=None,
-         compiler='g++'):
-    if config is not None and alias is None:
+         compiler='g++', dlalias=None):
+    if alias is None:
         alias = os.path.basename(sys.argv[0])
     if not quiet:
-        print('Append the following to {}:'.format(_SHELL_CONFIGS[shell]))
+        print('Append the following to {}:'.format(_SHELL_CONFIGS[shell]),
+                file=sys.stderr)
+    print(_header(shell, 'Jutge tools'))
     if p1_alias:
         print(_create_alias(shell, 'p1++', compiler + ' ' + COMPILE_FLAGS))
     if config is not None:
         print(_create_alias(shell, alias,
               os.path.basename(sys.argv[0]) + ' --config ' + config))
+    if dlalias is not None:
+        print(_dl_function(shell) % {'fname': dlalias, 'jt': alias})
+    print()
 
 
 def _parse_args(config):
@@ -51,7 +87,8 @@ def _parse_args(config):
         # Do not convert to string if not set
         'config': str(config.file) if config.file is not None else None,
         'alias': config.get('alias', os.path.basename(sys.argv[0])),
-        'p1_alias': config.getboolean('p1_alias', True)
+        'p1_alias': config.getboolean('p1_alias', True),
+        'dlalias': config.get('dlalias')
     }
 
     def exc():
