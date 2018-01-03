@@ -3,11 +3,17 @@ from pathlib import Path
 import subprocess
 from collections import namedtuple
 import shlex
+import os
+import signal
 from .compilef import compilef
 from ._aux.errors import TestError, CompileError
 
+# Ugly hack to get signal name from signal code
+SIGNALS = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
+     if v.startswith('SIG') and not v.startswith('SIG_'))
+
 def test(cases=None, compile=True, strict=True, debug=True, diff=True,
-         diff_tool=None):
+         diff_tool=None, verbose=False):
     if diff_tool is None:
         diff_tool = 'diff -y $output $correct'
     diff_tpl = Template(diff_tool)
@@ -29,22 +35,54 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
         try:
             inp = inpfile.open('r')
             out = subprocess.check_output([str(executable)], stdin=inp)
-            with corfile.open('rb') as corobj:
-                cor = corobj.read()
-            casename = inpfile.with_suffix('').name
-            if out == cor:
-                print(casename + ' passed')
-            else:
-                print(casename + ' failed')
-                failed_cases.append(FailedCase(
-                    case=inpfile.with_suffix('').name,
-                    out=out, cor=cor
-                ))
         except subprocess.CalledProcessError as ex:
-            raise TestError('sample exited with non-zero status, stopping: '
-                            + str(ex.returncode))
+            if verbose:
+                print()
+                print('=' * 10)
+                print('sample "{}" failed.'.format(inpfile.stem))
+                print('Output:')
+                print('-' * 10)
+            try:
+                if verbose:
+                    print(out)
+                else:
+                    out  # Ensure that 'out' is defined
+            except NameError:
+                if verbose:
+                    print('(No output)')
+                out = None
+            if verbose:
+                print('-' * 10)
+                print('Further information can be found on the error message')
+                print('=' * 10)
+            msg = ('sample exited with non-zero status, stopping: '
+                + str(ex.returncode))
+            try:
+                if ex.returncode < 0:
+                    msg += (
+                        ' (signal ' +
+                        SIGNALS.get(-ex.returncode, "unknown signal") + ')'
+                    )
+                else:
+                    msg += ' (' + os.strerror(ex.returncode) + ')'
+            except ValueError:
+                pass
+
+            raise TestError(msg, out=out)
         finally:
             inp.close()
+
+        with corfile.open('rb') as corobj:
+                cor = corobj.read()
+        casename = inpfile.with_suffix('').name
+        if out == cor:
+            print(casename + ' passed')
+        else:
+            print(casename + ' failed')
+            failed_cases.append(FailedCase(
+                case=inpfile.with_suffix('').name,
+                out=out, cor=cor
+            ))
 
     if not failed_cases:
         return
@@ -88,7 +126,8 @@ def _parse_args(config):
         'strict': config.getboolean('strict', True),
         'debug': config.getboolean('debug', True),
         'diff': config.getboolean('diff', True),
-        'diff_tool': config.get('diff_tool')
+        'diff_tool': config.get('diff_tool'),
+        'verbose': True
     }
 
     def exc():

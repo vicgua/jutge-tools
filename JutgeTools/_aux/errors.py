@@ -8,7 +8,9 @@ class CompileError(ProcessError):
     pass
 
 class TestError(ProcessError):
-    pass
+    def __init__(self, *args, out=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.out = out
 
 class DebugError(ProcessError):
     pass
