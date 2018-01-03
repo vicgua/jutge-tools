@@ -65,3 +65,36 @@ def _parse_args(config):
     def exc():
         return compilef(**d)
     return exc
+
+def _setup_parser(parent):
+    compile_parser = parent.add_parser(
+        'compile', aliases=['c'],
+        description='Compile the exercise in the current dir.',
+        help='compile the current exercise, but do not test it'
+    )
+    compile_parser.set_defaults(action=_parse_args)
+
+    compile_parser.add_argument(
+        '--no-strict',
+        action='store_false',
+        dest='strict',
+        help='do not use strict flags'
+    )
+
+    compile_parser.add_argument(
+        '-c', '--compiler',
+        help='compiler to be used. Must support g++-like flags. Default: g++'
+    )
+
+    compile_parser.add_argument(
+        '--no-debug',
+        action='store_false',
+        dest='debug',
+        help='do not include debugging symbols (and add -DNDEBUG -O2)'
+    )
+
+    compile_parser.add_argument(
+        'source',
+        nargs='*',
+        help='if specified, only these files will be compiled'
+    )

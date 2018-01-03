@@ -38,3 +38,23 @@ def _parse_args(config):
     def exc():
         return skel(**d)
     return exc
+
+def _setup_parser(parent):
+    skel_parser = parent.add_parser(
+        'skel',
+        description='Create a skeleton file structure',
+        help='create a skeleton file structure'
+    )
+    skel_parser.set_defaults(action=_parse_args)
+
+    skel_parser.add_argument(
+        '-d', '--dest',
+        help='destination folder'
+    )
+    skel_parser.add_argument(
+        '-f', '--files',
+        nargs='+',
+        metavar='FILE',
+        default=None,
+        help='files to create. Default: main.cc',
+    )

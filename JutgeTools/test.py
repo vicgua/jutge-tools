@@ -94,3 +94,54 @@ def _parse_args(config):
     def exc():
         return test(**d)
     return exc
+
+def _setup_parser(parent):
+    test_parser = parent.add_parser(
+        'test', aliases=['t'],
+        description='Test the exercise in the current dir and show the diff'
+                    ' if a case fails.',
+        help='test the current exercise with the test cases'
+    )
+    test_parser.set_defaults(action=_parse_args)
+
+    test_parser.add_argument(
+        'case',
+        nargs='*',
+        help='test only this case(s). By default all cases are tested.'
+             ' Specify without extension: `sample1`...'
+    )
+
+    test_compile_group = test_parser.add_mutually_exclusive_group()
+    test_compile_group.add_argument(
+        '-C', '--no-compile',
+        action='store_false',
+        dest='compile',
+        help='do not recompile. Ignored if there is not an executable'
+    )
+    test_compile_group.add_argument(
+        '--no-strict',
+        action='store_false',
+        dest='strict',
+        help='compile with the --no-strict flag'
+    )
+
+    test_parser.add_argument(
+        '--no-debug',
+        action='store_false',
+        dest='debug',
+        help='test with -DNDEBUG (no effect with --no-compile)'
+    )
+
+    test_diff_group = test_parser.add_mutually_exclusive_group()
+    test_diff_group.add_argument(
+        '-D', '--no-diff',
+        action='store_false',
+        dest='diff',
+        help='do not display a diff when test cases fail'
+    )
+    test_diff_group.add_argument(
+        '-d', '--diff-tool',
+        help='diff tool to use. "$output" and "$correct" will be substituted '
+             ' (they are already quoted).'
+             ' Default: `diff -y $output $correct`'
+    )

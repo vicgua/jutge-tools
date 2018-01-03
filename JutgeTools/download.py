@@ -98,3 +98,42 @@ def _parse_args(config):
     def exc():
         return download(**d)
     return exc
+
+def _setup_parser(parent):
+    download_parser = parent.add_parser(
+        'download', aliases=['dl'],
+        description='Download and extract a problem file into the current dir',
+        help='download an exercise and its test cases'
+    )
+    download_parser.set_defaults(action=_parse_args)
+
+    download_parser.add_argument(
+        'exercise',
+        help='exercise ID. E.g.: P51126_en'
+    )
+
+    download_parser.add_argument(
+        '-k', '--keep-zip',
+        action='store_true',
+        help='do not delete the archive after deflatting'
+    )
+
+    parser_skel_group = download_parser.add_mutually_exclusive_group()
+    parser_skel_group.add_argument(
+        '-s', '--skel-files',
+        metavar='FILENAME',
+        nargs='+',
+        default=[],
+        help='create skel files with these names',
+    )
+    parser_skel_group.add_argument(
+        '--cc',
+        action='store_true',
+        help='download .cc file attached to the problem'
+    )
+    parser_skel_group.add_argument(
+        '-S', '--no-skel',
+        action='store_false',
+        dest='skel',
+        help='do not create a skel file'
+    )

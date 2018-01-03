@@ -25,3 +25,26 @@ def _parse_args(config):
     def exc():
         return genconfig(config, **d)
     return exc
+
+def _setup_parser(parent):
+    genconfig_parser = parent.add_parser(
+        'genconfig',
+        description='Generate or update a config file and write it to'
+                    ' the location specified by --config',
+        help='generate or update a config file'
+    )
+    genconfig_parser.add_argument(
+        '-c', '--compiler',
+        help='compiler to be used. Must support g++-like flags'
+    )
+    genconfig_parser.add_argument(
+        '-diff', '--diff-tool',
+        help='diff tool to use. "$output" and "$correct" will be substituted '
+             ' (they are already quoted)'
+    )
+    genconfig_parser.add_argument(
+        '-dbg', '--debugger',
+        help='debbugger to be used. "$exe" will be substituted '
+             ' (it is already quoted)'
+    )
+    genconfig_parser.set_defaults(action=_parse_args)

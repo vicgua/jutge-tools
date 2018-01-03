@@ -38,3 +38,25 @@ def _parse_args(config):
     def exc():
         return debug(**d)
     return exc
+
+def _setup_parser(parent):
+    debug_parser = parent.add_parser(
+        'debug', aliases=['dbg'],
+        description='Start a debugger attached to the executable',
+        help='run on a debugger'
+    )
+    debug_parser.set_defaults(action=_parse_args)
+
+    debug_parser.add_argument(
+        '-d', '--debugger',
+        help='debbugger to be used. "$exe" will be substituted '
+             ' (it is already quoted).'
+             ' Default: `gdb -tui $exe`'
+    )
+
+    debug_parser.add_argument(
+        '--no-strict',
+        action='store_false',
+        dest='strict',
+        help='compile with the --no-strict flag'
+    )

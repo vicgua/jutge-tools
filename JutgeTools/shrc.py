@@ -94,3 +94,53 @@ def _parse_args(config):
     def exc():
         return shrc(**d)
     return exc
+
+def _setup_parser(parent):
+    shrc_parser = parent.add_parser(
+        'shrc',
+        description='Set up shell for development. The output of this command'
+                    ' should be appended to your config file',
+        help='set up shell for development'
+    )
+    shrc_parser.set_defaults(action=_parse_args)
+
+    shrc_parser.add_argument(
+        '-s', '--shell',
+        required=True,
+        choices=Shells,
+        type=Shells.get,
+        help='shell for which a config format should be output'
+    )
+
+    shrc_parser.add_argument(
+        '-q', '--quiet',
+        action='store_true',
+        dest='quiet',
+        help='do not show help to install aliases'
+    )
+
+    p1_group = shrc_parser.add_mutually_exclusive_group()
+    p1_group.add_argument(
+        '-c', '--compiler',
+        help='change base compiler for p1++. Must support g++-like flags.'
+             ' Default: g++'
+    )
+    p1_group.add_argument(
+        '--no-p1++-alias',
+        action='store_false',
+        dest='p1_alias',
+        help='do not add an alias for p1++'
+    )
+
+    shrc_parser.add_argument(
+        '--alias',
+        help='with config, set the name that will be aliased to '
+             ' {name} --config (config). By default, {name}'.format(
+                name=os.path.basename(sys.argv[0])
+            )
+    )
+
+    shrc_parser.add_argument(
+        '--dlalias',
+        help='set an alias that will download and cd into a problem'
+    )
