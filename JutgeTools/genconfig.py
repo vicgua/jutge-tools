@@ -35,16 +35,17 @@ def _setup_parser(parent):
     )
     genconfig_parser.add_argument(
         '-c', '--compiler',
-        help='compiler to be used. Must support g++-like flags'
+        help='compiler to be used. "$sources" and "$flags" will be substituted'
+             ' (they are already quoted). "$flags" are g++-style flags'
     )
     genconfig_parser.add_argument(
         '-diff', '--diff-tool',
-        help='diff tool to use. "$output" and "$correct" will be substituted '
+        help='diff tool to use. "$output" and "$correct" will be substituted'
              ' (they are already quoted)'
     )
     genconfig_parser.add_argument(
         '-dbg', '--debugger',
-        help='debbugger to be used. "$exe" will be substituted '
+        help='debbugger to be used. "$exe" will be substituted'
              ' (it is already quoted)'
     )
     genconfig_parser.set_defaults(action=_parse_args)

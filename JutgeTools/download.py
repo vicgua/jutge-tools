@@ -85,17 +85,27 @@ def download(exercise, keep_zip=False, cc=False, skel_files=-1):
     skel(exercise, skel_files)
 
 
+def _print_dest(exc):
+    p = Path.cwd() / exc
+    if p.is_dir():
+        print(p.absolute())
+    else:
+        print('{} does not exist'.format(p), file=sys.stderr)
+        print('.')  # Default to current dir ('.')
+
 def _parse_args(config):
     d = {
         'exercise': config['exercise'],
         'keep_zip': config.getboolean('keep_zip', False),
         'cc': config.getboolean('cc', False),
-        #'skel_files': args.skel_files if args.skel else None
         'skel_files': (config['skel_files']
             if config.getboolean('skel') else None)
     }
 
     def exc():
+        if config['get_dest']:
+            _print_dest(d['exercise'])
+            return
         return download(**d)
     return exc
 
@@ -136,4 +146,11 @@ def _setup_parser(parent):
         action='store_false',
         dest='skel',
         help='do not create a skel file'
+    )
+
+    download_parser.add_argument(
+        '--get-dest',
+        action='store_true',
+        help='get the dir where the problem resides.'
+             ' Only useful for scripting'
     )
