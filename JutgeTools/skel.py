@@ -58,3 +58,5 @@ def _setup_parser(parent):
         default=None,
         help='files to create. Default: main.cc',
     )
+
+    return skel_parser

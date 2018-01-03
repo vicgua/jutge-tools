@@ -154,3 +154,5 @@ def _setup_parser(parent):
         help='get the dir where the problem resides.'
              ' Only useful for scripting'
     )
+
+    return download_parser

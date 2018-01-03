@@ -145,3 +145,5 @@ def _setup_parser(parent):
              ' (they are already quoted).'
              ' Default: `diff -y $output $correct`'
     )
+
+    return test_parser

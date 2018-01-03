@@ -144,3 +144,5 @@ def _setup_parser(parent):
         '--dlalias',
         help='set an alias that will download and cd into a problem'
     )
+
+    return shrc_parser

@@ -36,13 +36,13 @@ def main():
         title='actions'
     )
 
-    download_sp(subparsers)
-    compile_sp(subparsers)
-    test_sp(subparsers)
-    debug_sp(subparsers)
-    skel_sp(subparsers)
-    shrc_sp(subparsers)
-    genconfig_sp(subparsers)
+    download_parser = download_sp(subparsers)
+    compile_parser = compile_sp(subparsers)
+    test_parser = test_sp(subparsers)
+    debug_parser = debug_sp(subparsers)
+    skel_parser = skel_sp(subparsers)
+    shrc_parser = shrc_sp(subparsers)
+    genconfig_parser = genconfig_sp(subparsers)
 
     args = parser.parse_args()
     if 'action' not in args:

@@ -98,3 +98,5 @@ def _setup_parser(parent):
         nargs='*',
         help='if specified, only these files will be compiled'
     )
+
+    return compile_parser

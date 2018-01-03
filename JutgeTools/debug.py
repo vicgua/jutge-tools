@@ -60,3 +60,5 @@ def _setup_parser(parent):
         dest='strict',
         help='compile with the --no-strict flag'
     )
+
+    return debug_parser

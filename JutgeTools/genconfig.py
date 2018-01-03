@@ -49,3 +49,5 @@ def _setup_parser(parent):
              ' (it is already quoted)'
     )
     genconfig_parser.set_defaults(action=_parse_args)
+
+    return genconfig_parser
