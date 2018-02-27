@@ -20,7 +20,7 @@ def compilef(strict=True, debug=True, compiler=None, sources=''):
     compiler_tpl = Template(compiler)
     output = Path(cwd.name.split('_')[0]).with_suffix('.x')
     if debug:
-        flags = shlex.split('-g -O2')
+        flags = shlex.split('-g -O0')
     else:
         flags = shlex.split('-DNDEBUG -O2')
 
