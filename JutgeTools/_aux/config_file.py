@@ -8,7 +8,6 @@ CONFIG_VARIABLES = {
     # cfgpath: (type, argname (None to use default), default value)
     # argname is required if the cfgpath contains something other that
     # valid Python identifiers, ., - and space.
-    # TODO: Nicer config names (e.g.: "p1++ alias" instead of "p1-alias")
 
     # compiler
     'compiler.cmd': (str, None, 'g++ -o $output $flags $sources'),
@@ -153,9 +152,9 @@ class ConfigFile:
         if isinstance(value, required_type):
             return value, True
         try:
-            if required_type == list:
+            if required_type is list:
                 return [value], True
-            if required_type == bool and isinstance(value, str):
+            if required_type is bool and isinstance(value, str):
                 TRUTHY_VALUES = {'1', 'true', 'yes', 't', 'y'}
                 FALSEY_VALUES = {'0', 'false', 'no', 'f', 'n'}
                 if value.lower() in TRUTHY_VALUES:

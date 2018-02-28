@@ -44,15 +44,6 @@ def compilef(strict=True, debug=True, compiler=None, sources=''):
     except subprocess.CalledProcessError as ex:
         raise CompileError('compiled exited with status ' +
                            str(ex.returncode))
-    # try:
-    #     subprocess.check_call(args)
-    # except subprocess.CalledProcessError as ex:
-    #     raise CompileError('compiler exited with status ' +
-    #                        str(ex.returncode))
-    # except FileNotFoundError:
-    #     raise CompileError(compiler +
-    #                        ' not installed; try specifying a different'
-    #                        ' compiler')
     print('Compiled successfully')
 
 def _parse_args(config):

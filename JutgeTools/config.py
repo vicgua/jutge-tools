@@ -21,7 +21,6 @@ def show_config(config):
 
 
 def set_config(config):
-    # TODO: List variables such as download.skel files can't be input
     setting = config['_arg.setting']
     unset = config['_arg.unset']
     if unset:
@@ -57,9 +56,7 @@ def _setup_parser(parent):
         help='generate, update or show the config file'
     )
 
-    subparsers = config_parser.add_subparsers(
-        #title='subactions'
-    )
+    subparsers = config_parser.add_subparsers()
 
     init_subparser = subparsers.add_parser(
         'init',

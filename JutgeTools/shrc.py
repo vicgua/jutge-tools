@@ -35,20 +35,20 @@ _SHELL_CONFIGS = {
 def _dl_function(shell):
     if shell in (Shells.BASH, Shells.ZSH):
         s = '''\
-            # Download a Jutge problem and change to it
+            # Download a Jutge problem and cd to it
             %(fname)s () {
                 %(jt)s download $@ && cd $(%(jt)s dl --get-dest $@)
             }
             '''
     elif shell == Shells.TCSH:
         s = '''\
-            : Download a Jutge problem and change to it
+            : Download a Jutge problem and cd to it
             alias %(fname)s '%(jt)s download \\!* && cd `%(jt)s --get-dest \\!*`
             '''
     elif shell == Shells.FISH:
         s = '''\
             function %(fname)s --description \\
-                '# Download a Jutge problem and change to it'
+                '# Download a Jutge problem and cd to it'
                 %(jt)s download $argv; and cd (%(jt)s dl --get-dest $argv)
             end
             '''
@@ -59,7 +59,7 @@ def _header(shell, comment):
         return '### {} ###'.format(comment)
     elif shell == Shells.TCSH:
         # The second of each is a semicolon, because tcsh's comment is a SINGLE
-        # semicolon
+        # colon
         return ':;: {} :;:'.format(comment)
 
 def shrc(shell, quiet=False, alias=None, p1_alias=True, config=None,
@@ -133,14 +133,6 @@ def _setup_parser(parent):
         dest=ConfigFile.argname('shrc.p1++ alias'),
         help='do not add an alias for p1++'
     )
-
-    # shrc_parser.add_argument(
-    #     '--alias',
-    #     help='with config, set the name that will be aliased to '
-    #          ' {name} --config (config). By default, {name}'.format(
-    #             name=os.path.basename(sys.argv[0])
-    #         )
-    # )
 
     shrc_parser.add_argument(
         '--dlalias',
