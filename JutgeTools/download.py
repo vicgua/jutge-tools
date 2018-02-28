@@ -5,6 +5,10 @@ from zipfile import ZipFile, BadZipfile
 from ._aux.errors import DownloadError
 from .skel import skel
 from ._aux.config_file import ConfigFile
+from tarfile import TarFile, TarError
+
+# TODO: join _download{,_cpp,_public_tar} in a single function, to avoid
+# repeating yourself
 
 def _download(exercise):
     url = "https://jutge.org/problems/{}/zip".format(exercise)
@@ -41,13 +45,29 @@ def _download_cpp(exercise):
         finally:
             orig.close()
 
+def _download_public_tar(exercise):
+    url = "https://jutge.org/problems/{}/public.tar".format(exercise)
+    print('Downloading ' + url)
+    path = Path.cwd() / exercise / 'public.tar'
+    with path.open('wb') as dest:
+        try:
+            orig = urlopen(url)
+            data = orig.read(128)
+            while data:
+                dest.write(data)
+                data = orig.read(128)
+        except HTTPError as ex:
+            raise DownloadError('download failed with code {} {}'.format(
+                ex.code, ex.reason
+            ))
 
-def download(exercise, keep_zip=False, cc=False, skel_files=-1):
+def download(exercise, keep_zip=False, cc=False, public_tar=False,
+             keep_public_tar=False, skel_files=-1):
     cwd = Path.cwd()
     zipf = cwd / (exercise + '.zip')
 
     if zipf.exists():
-        print(exercise + '.zip exists, skipping download')
+        print(str(zipf.relative_to(cwd)) + ' exists, skipping download')
         zip_downloaded = False
     else:
         _download(exercise)
@@ -58,14 +78,18 @@ def download(exercise, keep_zip=False, cc=False, skel_files=-1):
         print('dir "{}" already exists, skipping unzip'.format(exercise))
     else:
         try:
+            print('Extracting exercise')
             with ZipFile(str(zipf), 'r') as exczip:
                 exczip.extractall()
+                # While extracting zipfiles could create files in places
+                # other than the expected dir (see docs for extractall),
+                # I consider these files trusted.
         except BadZipfile:
             if zip_downloaded and not keep_zip:
                 zipf.unlink()
             raise DownloadError(zipf.name + ' is not a valid zip file.' +
-                                ' This may be because exercise does not ' +
-                                ' exists or because the download failed')
+                                ' This may be because the exercise does not' +
+                                ' exist or because the download failed')
 
     assert (cwd / exercise).exists()
 
@@ -76,6 +100,33 @@ def download(exercise, keep_zip=False, cc=False, skel_files=-1):
     if cc:
         _download_cpp(exercise)
         return
+
+    if public_tar:
+        tarf = cwd / (exercise + '-public.tar')
+        if tarf.exists():
+            print(str(tarf.relative_to(cwd)) + ' exists, skipping download')
+            tar_downloaded = False
+        else:
+            _download_public_tar(exercise)
+            tar_downloaded = True
+        assert tarf.exists()
+
+        try:
+            with TarFile(str(tarf), 'r') as publictar:
+                print('Extracting public files')
+                publictar.extractall(path=str(cwd / exercise))
+                # str-conversion in path needed in 3.5. Optional in 3.6
+                # See comment for exczip.extractall() above
+        except TarError:
+            if tar_downloaded and not keep_public_tar:
+                tarf.unlink()
+            raise DownloadError(tarf.name + ' is not a valid tar file.' +
+                                ' This may be because the exercise does not' +
+                                " exist, because it doesn't have a public" +
+                                '.tar file or because the download failed')
+        if not keep_public_tar:
+            print('Removing public.tar file')
+            tarf.unlink()
 
     if skel_files is None:
         return
@@ -99,6 +150,8 @@ def _parse_args(config):
         'exercise': config['_arg.exercise'],
         'keep_zip': config['download.keep zip'],
         'cc': config['_arg.cc'],
+        'public_tar': config['_arg.public tar'],
+        'keep_public_tar': config['download.keep public tar'],
         'skel_files': (config['download.skel files']
             if config['download.skel'] else None)
     }
@@ -125,10 +178,17 @@ def _setup_parser(parent):
     )
 
     download_parser.add_argument(
-        '-k', '--keep-zip',
+        '-kz', '--keep-zip',
         action='store_true',
         dest=ConfigFile.argname('download.keep zip'),
         help='do not delete the archive after deflatting'
+    )
+    download_parser.add_argument(
+        '-kp', '--keep-public', '--keep-public-tar',
+        action='store_true',
+        dest=ConfigFile.argname('download.keep public tar'),
+        help='do not delete the public archive after extracting.'
+             ' Useless without -p'
     )
 
     parser_skel_group = download_parser.add_mutually_exclusive_group()
@@ -151,6 +211,13 @@ def _setup_parser(parent):
         action='store_false',
         dest=ConfigFile.argname('download.skel'),
         help='do not create a skel file'
+    )
+
+    download_parser.add_argument(
+        '-p', '--public', '--public-tar',
+        action='store_true',
+        dest=ConfigFile.argname('_arg.public tar'),
+        help='download the public files of the exercise (public.tar)'
     )
 
     download_parser.add_argument(

@@ -17,6 +17,8 @@ def skel(dirname=None, files=None):
 
     for f in files:
         f_path = dest / f
+        if f_path.exists():
+            continue  # Do not overwrite existing files
         if f_path.suffix == '.hh':
             macroname = f_path.name.upper().replace('.', '_')
             text = header_template(macroname)
