@@ -25,10 +25,10 @@ CONFIG_VARIABLES = {
     # be called to build the default value
 
     # shrc
-    'shrc.p1++ alias': (bool, 'p1_alias', True)
+    'shrc.p1++ alias': (bool, 'p1_alias', True),
     # TODO: Change to allow name customization
     # 'shrc.p2++ alias': (bool, 'p2_alias', True)  # TODO
-    'shrc.dl alias': (str, None, 'dl')
+    'shrc.dl alias': (str, None, 'dl'),
 
     # test
     'test.compile': (bool, None, True),
@@ -43,10 +43,10 @@ class ConfigFile:
         self.file = None
         if args.config is not None:
             # An explicit config file has been set
-            self.file = Path(args.config).expanduser().resolve()
+            self.file = Path(args.config).expanduser()
         else:
             # Use a default path for config file
-            self.file = Path('~/.jutge-tools.yml').expanduser().resolve()
+            self.file = Path('~/.jutge-tools.yml').expanduser()
         try:
             with self.file.open('r') as f:
                 self.config.update(yaml.safe_load(f))
@@ -142,9 +142,35 @@ class ConfigFile:
             return default
         return converter(ret)
 
+    @staticmethod
+    def autoconvert(key, value):
+        if value is None:
+            return value, True
+        try:
+            required_type = CONFIG_VARIABLES[key][0]
+        except KeyError:
+            return value, True
+        if isinstance(value, required_type):
+            return value, True
+        try:
+            if required_type == list:
+                return [value], True
+            if required_type == bool and isinstance(value, str):
+                TRUTHY_VALUES = {'1', 'true', 'yes', 't', 'y'}
+                FALSEY_VALUES = {'0', 'false', 'no', 'f', 'n'}
+                if value.lower() in TRUTHY_VALUES:
+                    return True, True
+                elif value.lower() in FALSEY_VALUES:
+                    return False, True
+                else:
+                    return value, False
+            return required_type(value), True
+        except:
+            return value, False  # Failed
+
     def __setitem__(self, key, value):
         try:
-            required_type = CONFIG_VARIABLES[key]
+            required_type = CONFIG_VARIABLES[key][0]
         except KeyError:
             pass  # Non-standard config variables always type-check
         else:
@@ -178,4 +204,4 @@ class ConfigFile:
 
     def save(self):
         with self.file.open('w') as f:
-            yaml.dump(self.config, f)
+            yaml.dump(self.config, f, default_flow_style=False)

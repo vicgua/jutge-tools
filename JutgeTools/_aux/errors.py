@@ -17,3 +17,6 @@ class DebugError(ProcessError):
 
 class SkelError(ProcessError):
     pass
+
+class ConfigError(ProcessError):
+    pass
