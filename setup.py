@@ -5,6 +5,9 @@ setup(
     version='1.2.2',
     packages=find_packages(),
     python_requires='>=3.4',
+    install_requires=[
+        'pyyaml'
+    ],
     entry_points={
         'console_scripts': [
             'jutge-tools = JutgeTools._aux.cli:main'
