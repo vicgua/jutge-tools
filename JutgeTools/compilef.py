@@ -3,13 +3,14 @@ from pathlib import Path
 import shlex
 import subprocess
 from ._aux.errors import CompileError
+from ._aux.config_file import ConfigFile
 
 COMPILE_FLAGS = ('-ansi -Wall -Wextra -Werror -Wno-uninitialized'
                  ' -Wno-sign-compare -Wshadow')
 
 # Avoid clash with built-in "compile"
 def compilef(strict=True, debug=True, compiler=None, sources=''):
-    if compiler is None:
+    if compiler is None:  # TODO: Clean redundant checks
         compiler = 'g++ -o $output $flags $sources'
     print('Compiling...')
     cwd = Path.cwd()
@@ -56,10 +57,10 @@ def compilef(strict=True, debug=True, compiler=None, sources=''):
 
 def _parse_args(config):
     d = {
-        'strict': config.getboolean('strict', True),
-        'debug': config.getboolean('debug', True),
-        'compiler': config.get('compiler'),
-        'sources': config['source']
+        'strict': config['compiler.strict'],
+        'debug': config['compiler.debug'],
+        'compiler': config['compiler.cmd'],
+        'sources': config['_arg.sources']  # TODO: separate config and arguments
     }
 
     def exc():
@@ -77,24 +78,26 @@ def _setup_parser(parent):
     compile_parser.add_argument(
         '--no-strict',
         action='store_false',
-        dest='strict',
+        dest=ConfigFile.argname('compiler.strict'),
         help='do not use strict flags'
     )
 
     compile_parser.add_argument(
         '-c', '--compiler',
+        dest=ConfigFile.argname('compiler.cmd'),
         help='compiler to be used. Must support g++-like flags. Default: g++'
     )
 
     compile_parser.add_argument(
         '--no-debug',
         action='store_false',
-        dest='debug',
+        dest=ConfigFile.argname('compiler.debug'),
         help='do not include debugging symbols (and add -DNDEBUG -O2)'
     )
 
     compile_parser.add_argument(
-        'source',
+        ConfigFile.argname('_arg.sources'),
+        metavar='source',
         nargs='*',
         help='if specified, only these files will be compiled'
     )

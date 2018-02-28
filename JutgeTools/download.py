@@ -4,6 +4,7 @@ from pathlib import Path
 from zipfile import ZipFile, BadZipfile
 from ._aux.errors import DownloadError
 from .skel import skel
+from ._aux.config_file import ConfigFile
 
 def _download(exercise):
     url = "https://jutge.org/problems/{}/zip".format(exercise)
@@ -95,15 +96,15 @@ def _print_dest(exc):
 
 def _parse_args(config):
     d = {
-        'exercise': config['exercise'],
-        'keep_zip': config.getboolean('keep_zip', False),
-        'cc': config.getboolean('cc', False),
-        'skel_files': (config['skel_files']
-            if config.getboolean('skel') else None)
+        'exercise': config['_arg.exercise'],
+        'keep_zip': config['download.keep zip'],
+        'cc': config['_arg.cc'],
+        'skel_files': (config['download.skel files']
+            if config['download.skel'] else None)
     }
 
     def exc():
-        if config['get_dest']:
+        if config['_arg.get-dest']:
             _print_dest(d['exercise'])
             return
         return download(**d)
@@ -118,13 +119,15 @@ def _setup_parser(parent):
     download_parser.set_defaults(action=_parse_args)
 
     download_parser.add_argument(
-        'exercise',
+        ConfigFile.argname('_arg.exercise'),
+        metavar='exercise',
         help='exercise ID. E.g.: P51126_en'
     )
 
     download_parser.add_argument(
         '-k', '--keep-zip',
         action='store_true',
+        dest=ConfigFile.argname('download.keep zip'),
         help='do not delete the archive after deflatting'
     )
 
@@ -134,23 +137,26 @@ def _setup_parser(parent):
         metavar='FILENAME',
         nargs='+',
         default=[],
+        dest=ConfigFile.argname('download.skel files'),
         help='create skel files with these names',
     )
     parser_skel_group.add_argument(
         '--cc',
         action='store_true',
+        dest=ConfigFile.argname('_arg.cc'),
         help='download .cc file attached to the problem'
     )
     parser_skel_group.add_argument(
         '-S', '--no-skel',
         action='store_false',
-        dest='skel',
+        dest=ConfigFile.argname('download.skel'),
         help='do not create a skel file'
     )
 
     download_parser.add_argument(
         '--get-dest',
         action='store_true',
+        dest=ConfigFile.argname('_arg.get-dest'),
         help='get the dir where the problem resides.'
              ' Only useful for scripting'
     )

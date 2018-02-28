@@ -1,10 +1,39 @@
 import yaml
 from pathlib import Path
 
+# TODO: For boolean variables, flags with both --x and --no-x should be set
+# Otherwise, if the user defined a value other than the default, it will
+# always be used
 CONFIG_VARIABLES = {
-    'tools.compiler': (str, 'g++ -o $output $flags $sources'),
-    'tools.diff-tool': (str, 'diff -y $output $correct'),
-    'tools.debugger': (str, 'gdb -tui $exe')
+    # cfgpath: (type, argname (None to use default), default value)
+    # argname is required if the cfgpath contains something other that
+    # valid Python identifiers, ., - and space.
+    # TODO: Nicer config names (e.g.: "p1++ alias" instead of "p1-alias")
+
+    # compiler
+    'compiler.cmd': (str, None, 'g++ -o $output $flags $sources'),
+    'compiler.debug': (bool, None, True),
+    'compiler.strict': (bool, None, True),
+
+    # debugger
+    'debugger.cmd': (str, None, 'gdb -tui $exe'),
+
+    # download
+    'download.keep zip': (bool, None, False),
+    'download.skel': (bool, None, True),
+    'download.skel files': (list, None, list),  # If using a callable, it will
+    # be called to build the default value
+
+    # shrc
+    'shrc.p1++ alias': (bool, 'p1_alias', True)
+    # TODO: Change to allow name customization
+    # 'shrc.p2++ alias': (bool, 'p2_alias', True)  # TODO
+    'shrc.dl alias': (str, None, 'dl')
+
+    # test
+    'test.compile': (bool, None, True),
+    'test.diff': (bool, None, True),
+    'test.diff tool': (str, None, 'diff -y $output $correct')
 }
 
 class ConfigFile:
@@ -82,17 +111,34 @@ class ConfigFile:
             ConfigFile.cfgpath_set(config, var.split('.'), None)
         return config
 
+    @staticmethod
+    def argname(cfgpath):
+        '''Get the argument name from the config path.
+
+        For example: a.b-c.d -> a__b_c__d
+        '''
+        try:
+            set_argname = CONFIG_VARIABLES[cfgpath][1]
+            if set_argname is not None:
+                return set_argname
+        except KeyError:
+            # Non-standard key. Use the usual method
+            pass
+        transtable = str.maketrans({'.': '__', '-': '_', ' ': '_'})
+        return cfgpath.translate(transtable)
+
     def __getitem__(self, key):
-        ret = getattr(self.override, key.replace('.', '__'), None)
-        # TODO: Change override keys so that they match the key,
-        # replacing '.' with '__' ('a.b.c' -> 'a__b__c')
+        ret = getattr(self.override, self.argname(key), None)
         if ret is None:
             ret = self.cfgpath_get(self.config, key.split('.'))
         try:
-            converter, default = CONFIG_VARIABLES[key]
+            converter, _, default = CONFIG_VARIABLES[key]
         except KeyError:
             return ret  # "key" is not a standard key
         if ret is None:
+            if callable(default):
+                # For lists
+                return default()
             return default
         return converter(ret)
 
@@ -103,7 +149,7 @@ class ConfigFile:
             pass  # Non-standard config variables always type-check
         else:
             # Type checking for standard config variables
-            if not isinstance(value, required_type):
+            if value is not None and not isinstance(value, required_type):
                 raise TypeError(
                     'config value {} must be a {} ({} passed)'.format(
                         key,
@@ -112,13 +158,13 @@ class ConfigFile:
                     ))
         # Add an override in case there is one already (another option
         # would be to delete the override)
-        setattr(self.override, key.replace('.', '__'), value)
+        setattr(self.override, self.argname(key), value)
         # Set it in the permanent config, so it will be saved with save()
         self.cfgpath_set(self.config, key.split('.'), value)
 
     def __delitem__(self, key):
         try:
-            delattr(self.override, key.replace('.', '__'))
+            delattr(self.override, self.argname(key))
         except AttributeError:
             pass  # The key has no override
         if key in CONFIG_VARIABLES:

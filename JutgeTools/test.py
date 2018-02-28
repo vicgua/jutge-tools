@@ -7,11 +7,13 @@ import os
 import signal
 from .compilef import compilef
 from ._aux.errors import TestError, CompileError
+from ._aux.config_file import ConfigFile
 
 # Ugly hack to get signal name from signal code
 SIGNALS = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
      if v.startswith('SIG') and not v.startswith('SIG_'))
 
+# TODO: Avoid passing arguments to compiler, use instead config
 def test(cases=None, compile=True, strict=True, debug=True, diff=True,
          diff_tool=None, verbose=False):
     if diff_tool is None:
@@ -122,12 +124,12 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
 
 def _parse_args(config):
     d = {
-        'cases': config['case'],
-        'compile': config.getboolean('compile', True),
-        'strict': config.getboolean('strict', True),
-        'debug': config.getboolean('debug', True),
-        'diff': config.getboolean('diff', True),
-        'diff_tool': config.get('diff_tool'),
+        'cases': config['_arg.cases'],
+        'compile': config['test.compile'],
+        'strict': config['compiler.strict'],
+        'debug': config['compiler.debug'],
+        'diff': config['test.diff'],
+        'diff_tool': config['test.diff tool'],
         'verbose': True
     }
 
@@ -145,7 +147,8 @@ def _setup_parser(parent):
     test_parser.set_defaults(action=_parse_args)
 
     test_parser.add_argument(
-        'case',
+        ConfigFile.argname('_arg.cases'),
+        metavar='case',
         nargs='*',
         help='test only this case(s). By default all cases are tested.'
              ' Specify without extension: `sample1`...'
@@ -155,20 +158,20 @@ def _setup_parser(parent):
     test_compile_group.add_argument(
         '-C', '--no-compile',
         action='store_false',
-        dest='compile',
+        dest=ConfigFile.argname('test.compile'),
         help='do not recompile. Ignored if there is not an executable'
     )
     test_compile_group.add_argument(
         '--no-strict',
         action='store_false',
-        dest='strict',
+        dest=ConfigFile.argname('compiler.strict'),
         help='compile with the --no-strict flag'
     )
 
     test_parser.add_argument(
         '--no-debug',
         action='store_false',
-        dest='debug',
+        dest=ConfigFile.argname('compiler.debug'),
         help='test with -DNDEBUG (no effect with --no-compile)'
     )
 
@@ -176,11 +179,12 @@ def _setup_parser(parent):
     test_diff_group.add_argument(
         '-D', '--no-diff',
         action='store_false',
-        dest='diff',
+        dest=ConfigFile.argname('test.diff'),
         help='do not display a diff when test cases fail'
     )
     test_diff_group.add_argument(
         '-d', '--diff-tool',
+        dest=ConfigFile.argname('test.diff tool'),
         help='diff tool to use. "$output" and "$correct" will be substituted '
              ' (they are already quoted).'
              ' Default: `diff -y $output $correct`'

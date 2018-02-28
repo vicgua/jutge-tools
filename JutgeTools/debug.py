@@ -4,7 +4,9 @@ import subprocess
 import shlex
 from ._aux.errors import DebugError, CompileError
 from .compilef import compilef
+from ._aux.config_file import ConfigFile
 
+# TODO: Avoid passing arguments to compiler, use instead config
 def debug(debugger=None, compile=True, strict=True):
     if debugger is None:
         debugger = 'gdb -tui $exe'  # GDB with GUI
@@ -31,8 +33,8 @@ def debug(debugger=None, compile=True, strict=True):
 
 def _parse_args(config):
     d = {
-        'debugger': config.get('debugger', None),
-        'strict': config.getboolean('strict', True)
+        'debugger': config['debugger.cmd'],
+        'strict': config['compiler.strict']
     }
 
     def exc():
@@ -49,6 +51,7 @@ def _setup_parser(parent):
 
     debug_parser.add_argument(
         '-d', '--debugger',
+        dest=ConfigFile.argname('debugger.cmd'),
         help='debbugger to be used. "$exe" will be substituted '
              ' (it is already quoted).'
              ' Default: `gdb -tui $exe`'
@@ -57,7 +60,7 @@ def _setup_parser(parent):
     debug_parser.add_argument(
         '--no-strict',
         action='store_false',
-        dest='strict',
+        dest=ConfigFile.argname('compiler.strict'),
         help='compile with the --no-strict flag'
     )
 

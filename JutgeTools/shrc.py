@@ -1,9 +1,10 @@
 from enum import Enum
-from shlex import quote
+from shlex import quote, split
 import sys
 import os.path
 from textwrap import dedent as _dedent
 from .compilef import COMPILE_FLAGS
+from ._aux.config_file import ConfigFile
 
 class Shells(Enum):
     BASH = 1
@@ -62,7 +63,7 @@ def _header(shell, comment):
         return ':;: {} :;:'.format(comment)
 
 def shrc(shell, quiet=False, alias=None, p1_alias=True, config=None,
-         compiler='g++', dlalias=None):
+         compiler='g++', dl_alias=None):
     if alias is None:
         alias = os.path.basename(sys.argv[0])
     if not quiet:
@@ -74,21 +75,20 @@ def shrc(shell, quiet=False, alias=None, p1_alias=True, config=None,
     if config is not None:
         print(_create_alias(shell, alias,
               os.path.basename(sys.argv[0]) + ' --config ' + config))
-    if dlalias is not None:
-        print(_dl_function(shell) % {'fname': dlalias, 'jt': alias})
+    if dl_alias is not None:
+        print(_dl_function(shell) % {'fname': dl_alias, 'jt': alias})
     print()
 
 
 def _parse_args(config):
     d = {
-        'shell': config['shell'],
-        'quiet': config.getboolean('quiet', False),
-        'compiler': config.get('compiler', 'g++'),
-        # Do not convert to string if not set
-        'config': str(config.file) if config.file is not None else None,
-        'alias': config.get('alias', os.path.basename(sys.argv[0])),
-        'p1_alias': config.getboolean('p1_alias', True),
-        'dlalias': config.get('dlalias')
+        'shell': config['_arg.shell'],
+        'quiet': config['_arg.quiet'],
+        'compiler': split(config['compiler.cmd'])[0],
+        'config': None,  # TODO: Rework shrc
+        'alias': None,  # TODO
+        'p1_alias': config['shrc.p1++ alias'],
+        'dlalias': config['shrc.dl alias']
     }
 
     def exc():
@@ -109,39 +109,42 @@ def _setup_parser(parent):
         required=True,
         choices=Shells,
         type=Shells.get,
+        dest=ConfigFile.argname('_arg.shell'),
         help='shell for which a config format should be output'
     )
 
     shrc_parser.add_argument(
         '-q', '--quiet',
         action='store_true',
-        dest='quiet',
+        dest=ConfigFile.argname('_arg.quiet'),
         help='do not show help to install aliases'
     )
 
     p1_group = shrc_parser.add_mutually_exclusive_group()
     p1_group.add_argument(
         '-c', '--compiler',
+        dest=ConfigFile.argname('compiler.cmd'),
         help='change base compiler for p1++. Must support g++-like flags.'
              ' Default: g++'
     )
     p1_group.add_argument(
         '--no-p1++-alias',
         action='store_false',
-        dest='p1_alias',
+        dest=ConfigFile.argname('shrc.p1++ alias'),
         help='do not add an alias for p1++'
     )
 
-    shrc_parser.add_argument(
-        '--alias',
-        help='with config, set the name that will be aliased to '
-             ' {name} --config (config). By default, {name}'.format(
-                name=os.path.basename(sys.argv[0])
-            )
-    )
+    # shrc_parser.add_argument(
+    #     '--alias',
+    #     help='with config, set the name that will be aliased to '
+    #          ' {name} --config (config). By default, {name}'.format(
+    #             name=os.path.basename(sys.argv[0])
+    #         )
+    # )
 
     shrc_parser.add_argument(
         '--dlalias',
+        dest=ConfigFile.argname('shrc.dl alias'),
         help='set an alias that will download and cd into a problem'
     )
 

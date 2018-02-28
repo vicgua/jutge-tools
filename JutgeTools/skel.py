@@ -1,6 +1,7 @@
 from pathlib import Path
 from ._aux.errors import SkelError
 from ._aux.file_templates import *
+from ._aux.config_file import ConfigFile
 
 def skel(dirname=None, files=None):
     if dirname is not None:
@@ -31,8 +32,8 @@ def skel(dirname=None, files=None):
 
 def _parse_args(config):
     d = {
-        'dirname': config.get('dest'),
-        'files': config.get('files')
+        'dirname': config['_arg.dest'],
+        'files': config['_arg.files']
     }
 
     def exc():
@@ -49,6 +50,7 @@ def _setup_parser(parent):
 
     skel_parser.add_argument(
         '-d', '--dest',
+        dest=ConfigFile.argname('_arg.dest'),
         help='destination folder'
     )
     skel_parser.add_argument(
@@ -56,6 +58,7 @@ def _setup_parser(parent):
         nargs='+',
         metavar='FILE',
         default=None,
+        dest=ConfigFile.argname('_arg.files'),
         help='files to create. Default: main.cc',
     )
 

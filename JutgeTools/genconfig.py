@@ -1,3 +1,8 @@
+import warnings
+
+warnings.warn('genconfig is deprecated. Use the new module "config" instead',
+              DeprecationWarning)
+
 def genconfig(config, compiler, diff_tool, debugger):
     if compiler:
         config['compiler'] = compiler
