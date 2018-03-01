@@ -2,14 +2,18 @@ from string import Template
 from pathlib import Path
 import shlex
 import subprocess
+from enum import Enum
 from ._aux.errors import CompileError
 from ._aux.config_file import ConfigFile
 
-COMPILE_FLAGS = ('-ansi -Wall -Wextra -Werror -Wno-uninitialized'
+COMPILE_FLAGS = ('-Wall -Wextra -Werror -Wno-uninitialized'
                  ' -Wno-sign-compare -Wshadow')
 
+VALID_STANDARDS = ('c++98', 'c++03', 'c++11', 'c++14')
+
 # Avoid clash with built-in "compile"
-def compilef(strict=True, debug=True, compiler=None, sources=''):
+def compilef(strict=True, debug=True, compiler=None, standard='c++11',
+             sources=''):
     if compiler is None:  # TODO: Clean redundant checks
         compiler = 'g++ -o $output $flags $sources'
     print('Compiling...')
@@ -20,10 +24,14 @@ def compilef(strict=True, debug=True, compiler=None, sources=''):
         raise CompileError('no C++ files (must end in .cc)')
     compiler_tpl = Template(compiler)
     output = Path(cwd.name.split('_')[0]).with_suffix('.x')
+    if standard not in VALID_STANDARDS:
+        raise ValueError(standard + ' is not a recognised standard. Valid'
+                                    ' values are ' + str(VALID_STANDARDS))
+    flags = '-std=' + str(standard)
     if debug:
-        flags = shlex.split('-g -O0')
+        flags += shlex.split('-g -D_GLIBCXX_DEBUG -O0')
     else:
-        flags = shlex.split('-DNDEBUG -O2')
+        flags += shlex.split('-DNDEBUG -O2')
 
     if strict:
         flags += shlex.split(COMPILE_FLAGS)
@@ -51,7 +59,8 @@ def _parse_args(config):
         'strict': config['compiler.strict'],
         'debug': config['compiler.debug'],
         'compiler': config['compiler.cmd'],
-        'sources': config['_arg.sources']  # TODO: separate config and arguments
+        'standard': config['compiler.standard'],
+        'sources': config['_arg.sources']
     }
 
     def exc():
@@ -77,6 +86,13 @@ def _setup_parser(parent):
         '-c', '--compiler',
         dest=ConfigFile.argname('compiler.cmd'),
         help='compiler to be used. Must support g++-like flags. Default: g++'
+    )
+
+    compile_parser.add_argument(
+        '-std', '--standard',
+        choices=VALID_STANDARDS,
+        dest=ConfigFile.argname('compiler.standard'),
+        help='C++ standard'
     )
 
     compile_parser.add_argument(
