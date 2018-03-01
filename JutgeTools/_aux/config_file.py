@@ -25,8 +25,7 @@ CONFIG_VARIABLES = {
 
     # shrc
     'shrc.p1++ alias': (bool, 'p1_alias', True),
-    # TODO: Change to allow name customization
-    # 'shrc.p2++ alias': (bool, 'p2_alias', True)  # TODO
+    'shrc.p2++ alias': (bool, 'p2_alias', True)
     'shrc.dl alias': (str, None, 'dl'),
 
     # test

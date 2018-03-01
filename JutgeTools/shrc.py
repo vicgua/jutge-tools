@@ -36,20 +36,20 @@ def _dl_function(shell):
     if shell in (Shells.BASH, Shells.ZSH):
         s = '''\
             # Download a Jutge problem and cd to it
-            %(fname)s () {
-                %(jt)s download $@ && cd $(%(jt)s dl --get-dest $@)
+            {fname} () {
+                {jt} download $@ && cd $({jt} dl --get-dest $@)
             }
             '''
     elif shell == Shells.TCSH:
         s = '''\
             : Download a Jutge problem and cd to it
-            alias %(fname)s '%(jt)s download \\!* && cd `%(jt)s --get-dest \\!*`
+            alias {fname} '{jt} download \\!* && cd `{jt} --get-dest \\!*`
             '''
     elif shell == Shells.FISH:
         s = '''\
-            function %(fname)s --description \\
+            function {fname} --description \\
                 '# Download a Jutge problem and cd to it'
-                %(jt)s download $argv; and cd (%(jt)s dl --get-dest $argv)
+                {jt} download $argv; and cd ({jt} dl --get-dest $argv)
             end
             '''
     return _dedent(s)
@@ -62,21 +62,23 @@ def _header(shell, comment):
         # colon
         return ':;: {} :;:'.format(comment)
 
-def shrc(shell, quiet=False, alias=None, p1_alias=True, config=None,
-         compiler='g++', dl_alias=None):
-    if alias is None:
-        alias = os.path.basename(sys.argv[0])
+def shrc(shell, quiet=False, alias=None, p1_alias=None, p2_alias=None,
+         dl_alias=None, compiler='g++'):
     if not quiet:
         print('Append the following to {}:'.format(_SHELL_CONFIGS[shell]),
                 file=sys.stderr)
     print(_header(shell, 'Jutge tools'))
-    if p1_alias:
-        print(_create_alias(shell, 'p1++', compiler + ' ' + COMPILE_FLAGS))
-    if config is not None:
-        print(_create_alias(shell, alias,
-              os.path.basename(sys.argv[0]) + ' --config ' + config))
+    if p1_alias is not None:
+        print(_create_alias(shell, p1_alias, compiler + ' ' + COMPILE_FLAGS
+              + '-std=c++98'))
+    if p2_alias is not None:
+        print(_create_alias(shell, p2_alias, compiler + ' ' + COMPILE_FLAGS
+                            + '-std=c++11'))
     if dl_alias is not None:
-        print(_dl_function(shell) % {'fname': dl_alias, 'jt': alias})
+        print(_dl_function(shell).format(
+            fname=dl_alias,
+            jt=os.path.basename(sys.argv[0])
+        ))
     print()
 
 
@@ -85,9 +87,8 @@ def _parse_args(config):
         'shell': config['_arg.shell'],
         'quiet': config['_arg.quiet'],
         'compiler': split(config['compiler.cmd'])[0],
-        'config': None,  # TODO: Rework shrc
-        'alias': None,  # TODO
         'p1_alias': config['shrc.p1++ alias'],
+        'p2_alias': config['shrc.p2++ alias'],
         'dlalias': config['shrc.dl alias']
     }
 
@@ -122,20 +123,40 @@ def _setup_parser(parent):
 
     p1_group = shrc_parser.add_mutually_exclusive_group()
     p1_group.add_argument(
-        '-c', '--compiler',
-        dest=ConfigFile.argname('compiler.cmd'),
-        help='change base compiler for p1++. Must support g++-like flags.'
-             ' Default: g++'
+        '--p1++-alias',
+        metavar='alias',
+        default='p1++',
+        dest=ConfigFile.argname('shrc.p1++ alias'),
+        help='add an alias for p1++ (strict + C++98) with this name.'
+             ' By default, p1++'
     )
     p1_group.add_argument(
         '--no-p1++-alias',
-        action='store_false',
+        action='store_const',
+        const=None,
         dest=ConfigFile.argname('shrc.p1++ alias'),
         help='do not add an alias for p1++'
     )
 
+    p2_group = shrc_parser.add_mutually_exclusive_group()
+    p2_group.add_argument(
+        '--p2++-alias',
+        metavar='alias',
+        default='p2++',
+        dest=ConfigFile.argname('shrc.p2++ alias'),
+        help='add an alias for p2++ (strict + C++11) with this name.'
+             ' By default, p2++'
+    )
+    p2_group.add_argument(
+        '--no-p2++-alias',
+        action='store_const',
+        const=None,
+        help='do not add an alias for p2++'
+    )
+
     shrc_parser.add_argument(
         '--dlalias',
+        metavar='alias',
         dest=ConfigFile.argname('shrc.dl alias'),
         help='set an alias that will download and cd into a problem'
     )
