@@ -27,7 +27,7 @@ def compilef(strict=True, debug=True, compiler=None, standard='c++11',
     if standard not in VALID_STANDARDS:
         raise ValueError(standard + ' is not a recognised standard. Valid'
                                     ' values are ' + str(VALID_STANDARDS))
-    flags = '-std=' + str(standard)
+    flags = ['-std=' + str(standard)]
     if debug:
         flags += shlex.split('-g -D_GLIBCXX_DEBUG -O0')
     else:
