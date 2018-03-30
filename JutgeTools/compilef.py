@@ -36,7 +36,8 @@ def compilef(strict=True, debug=True, compiler=None, standard='c++11',
     if strict:
         flags += shlex.split(COMPILE_FLAGS)
 
-    sources_subs = map(lambda f: shlex.quote(str(Path(f).resolve())), sources)
+    sources_subs = map(lambda f: shlex.quote(str(Path(f).relative_to(cwd))),
+                        sources)
 
     try:
         compiler_cmd = compiler_tpl.substitute(
