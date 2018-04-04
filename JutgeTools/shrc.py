@@ -36,9 +36,9 @@ def _dl_function(shell):
     if shell in (Shells.BASH, Shells.ZSH):
         s = '''\
             # Download a Jutge problem and cd to it
-            {fname} () {
+            {fname} () {{
                 {jt} download $@ && cd $({jt} dl --get-dest $@)
-            }
+            }}
             '''
     elif shell == Shells.TCSH:
         s = '''\
@@ -89,7 +89,7 @@ def _parse_args(config):
         'compiler': split(config['compiler.cmd'])[0],
         'p1_alias': config['shrc.p1++ alias'],
         'p2_alias': config['shrc.p2++ alias'],
-        'dlalias': config['shrc.dl alias']
+        'dl_alias': config['shrc.dl alias']
     }
 
     def exc():
