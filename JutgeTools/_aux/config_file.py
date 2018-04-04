@@ -32,7 +32,10 @@ CONFIG_VARIABLES = {
     # test
     'test.compile': (bool, None, True),
     'test.diff': (bool, None, True),
-    'test.diff tool': (str, None, 'diff -y $output $correct')
+    'test.diff tool': (str, None, 'diff -y $output $correct'),
+
+    # skel
+    'skel.makefile': (bool, None, False),
 }
 
 class ConfigFile:

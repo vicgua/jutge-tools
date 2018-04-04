@@ -2,7 +2,7 @@
 # optionally, the tar archive to be sent.
 
 # PROGRAMNAME: Name of the produced executable
-PROGRAMNAME = program
+PROGRAMNAME = ${default_programname}
 
 # OBJECTS: The objects that have to be linked together to form the program.
 # For example, if the program consists of a "main.cc", "example.cc",
@@ -14,12 +14,14 @@ PROGRAMNAME = program
 # FORBIDDEN VALUES: all, clean, exe, tar. All other values will be interpreted
 # with the usual Make meaning (i.e.: avoid names with * or other strange
 # symbols if you don't know what you are doing).
+# WARNING: This implies that spaces are not allowed and are likely to
+# go wrong. Check the Make manual for other unusual symbols
 
-OBJECTS = {default_objects}
+OBJECTS = ${default_objects}
 
 # TARNAME: Name of the produced tar. Should end with a .tar
 # FORBIDDEN VALUES: "tar"
-TARNAME = program.tar
+TARNAME = ${default_tarname}
 
 # TARFILES: Files to be added to the tar archive
-TARFILES = {default_tarfiles}
+TARFILES = ${default_tarfiles}

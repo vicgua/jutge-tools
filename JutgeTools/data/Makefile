@@ -1,3 +1,6 @@
+# THIS FILE IS NOT INTENDED TO BE EDITED
+# This Makefile is a general template; to configure it, edit the
+# "build_conf.mk" file.
 include build_conf.mk
 
 # If your version of GNU tar is not named "tar", use "make TAR=gtar" (for
