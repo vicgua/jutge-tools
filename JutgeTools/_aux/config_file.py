@@ -1,5 +1,6 @@
 import yaml
 from pathlib import Path
+import pprint
 
 # TODO: For boolean variables, flags with both --x and --no-x should be set
 # Otherwise, if the user defined a value other than the default, it will
@@ -128,7 +129,10 @@ class ConfigFile:
     def __getitem__(self, key):
         ret = getattr(self.override, self.argname(key), None)
         if ret is None:
-            ret = self.cfgpath_get(self.config, key.split('.'))
+            try:
+                ret = self.cfgpath_get(self.config, key.split('.'))
+            except KeyError:
+                ret = None
         try:
             converter, _, default = CONFIG_VARIABLES[key]
         except KeyError:
@@ -198,8 +202,18 @@ class ConfigFile:
             # Key not recognised, and may be deleted (instead of set to None)
             self.cfgpath_del(self.config, key.split('.'))
 
-
-
     def save(self):
         with self.file.open('w') as f:
             yaml.dump(self.config, f, default_flow_style=False)
+
+    def __repr__(self):
+        return '<ConfigFile: override={}, config={}>'.format(self.override,
+            self.config)
+
+    def pformat(self, pprinter=None):
+        if pprinter is None:
+            pprinter = pprint.PrettyPrinter()
+        return '<ConfigFile: override={}, config={}>'.format(
+            pprinter.pformat(self.override),
+            pprinter.pformat(self.config)
+        )
