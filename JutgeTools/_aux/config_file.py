@@ -11,9 +11,11 @@ CONFIG_VARIABLES = {
     # valid Python identifiers, ., - and space.
 
     # compiler
-    'compiler.cmd': (str, None, 'g++ -o $output $flags $sources'),
+    'compiler.cmd': (str, None, 'g++'),
+    'compiler.make': (str, None, 'make'),
     'compiler.debug': (bool, None, True),
     'compiler.strict': (bool, None, True),
+    'compiler.standard': (str, None, 'c++11'),
 
     # debugger
     'debugger.cmd': (str, None, 'gdb -tui $exe'),
