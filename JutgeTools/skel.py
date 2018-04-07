@@ -54,10 +54,16 @@ def skel(dirname=None, files=None, makefile=False):
         tar_files.append(f_path)
 
     if makefile:
+        sed_pattern = pkg_resources.resource_string(
+            __name__, 'data/prefix.sed').decode('utf-8')
+        make_sed_pattern = ' \\\n'.join(map(shlex.quote, filter(
+            None, sed_pattern.split('\n'))))
         makefile_path = dest / 'Makefile'
-        makefile_string = pkg_resources.resource_string(__name__,
-                                                        'data/Makefile')
-        with makefile_path.open('wb') as fobj:
+        makefile_template = pkg_resources.resource_string(
+            __name__, 'data/Makefile').decode('utf-8')
+        makefile_string = makefile_template.format(
+            sed_pattern=make_sed_pattern)
+        with makefile_path.open('w') as fobj:
             fobj.write(makefile_string)
         build_conf_path = dest / 'build_conf.mk'
         build_conf_template = Template(pkg_resources.resource_string(
