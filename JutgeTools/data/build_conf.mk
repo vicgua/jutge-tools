@@ -25,3 +25,26 @@ TARNAME = ${default_tarname}
 
 # TARFILES: Files to be added to the tar archive
 TARFILES = ${default_tarfiles}
+
+# Advanced settings
+# (You usually don't have to touch this)
+
+# BUILD_DIR: Directory where internal build files (such as dependency files
+# and a list of built objects) will be kept.
+BUILD_DIR := .build
+
+# TARAPPEND: Set to true to append to the tar file when files are updated
+# instead of creating a new tar.
+# WARNING: When appending to a tar file, the old version of the file is not
+# deleted, it is kept in the tar, increasing its size. Also, the Jutge
+# might choke on tars with duplicated files, or with more files than it
+# expects. Change this if the tar step takes too much time (unlikely for
+# Jutge problems).
+TARAPPEND := false
+
+# ORDERED_BUILD_OBJECTS: Set to false to simply append created objects
+# to the built objects list. Otherwise, the list is guaranted to be sorted
+# and with no repeated elements.
+# As with TARAPPEND, this setting is only relevant when you have a lot of
+# source files (unlikely for Jutge)
+ORDERED_BUILD_OBJECTS := true
