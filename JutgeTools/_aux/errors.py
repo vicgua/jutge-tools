@@ -20,3 +20,6 @@ class SkelError(ProcessError):
 
 class ConfigError(ProcessError):
     pass
+
+class TarError(ProcessError):
+    pass

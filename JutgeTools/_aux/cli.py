@@ -10,6 +10,7 @@ from ..skel import _setup_parser as skel_sp
 from ..shrc import Shells, _setup_parser as shrc_sp
 from ..debug import _setup_parser as debug_sp
 from ..config import _setup_parser as config_sp
+from ..tar import _setup_parser as tar_sp
 
 from .errors import *
 from .config_file import ConfigFile
@@ -41,6 +42,7 @@ def main():
     test_parser = test_sp(subparsers)
     debug_parser = debug_sp(subparsers)
     skel_parser = skel_sp(subparsers)
+    tar_parser = tar_sp(subparsers)
     shrc_parser = shrc_sp(subparsers)
     config_parser = config_sp(subparsers)
 
