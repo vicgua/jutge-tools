@@ -5,5 +5,6 @@ __all__ = [
     'genconfig',
     'shrc',
     'skel',
+    'tar',
     'test'
 ]
