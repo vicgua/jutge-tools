@@ -3,17 +3,17 @@ import pkg_resources
 import sys
 import os.path
 
-from ..download import _setup_parser as download_sp
-from ..compilef import _setup_parser as compile_sp
-from ..test import _setup_parser as test_sp
-from ..skel import _setup_parser as skel_sp
-from ..shrc import Shells, _setup_parser as shrc_sp
-from ..debug import _setup_parser as debug_sp
-from ..config import _setup_parser as config_sp
-from ..tar import _setup_parser as tar_sp
+from .download import _setup_parser as download_sp
+from .compilef import _setup_parser as compile_sp
+from .test import _setup_parser as test_sp
+from .skel import _setup_parser as skel_sp
+from .shrc import Shells, _setup_parser as shrc_sp
+from .debug import _setup_parser as debug_sp
+from .config import _setup_parser as config_sp
+from .tar import _setup_parser as tar_sp
 
-from .errors import *
-from .config_file import ConfigFile
+from ._aux.errors import *
+from ._aux.config_file import ConfigFile
 
 try:
     version = pkg_resources.require("jutge-tools")[0].version
@@ -64,3 +64,6 @@ def main():
         config_parser.error(ex)
     except ProcessError as ex:
         parser.error(ex)
+
+if __name__ == '__main__':
+    main()

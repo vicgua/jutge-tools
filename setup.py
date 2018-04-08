@@ -13,7 +13,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'jutge-tools = JutgeTools._aux.cli:main'
+            'jutge-tools = JutgeTools.__main__:main'
         ]
     }
 )
