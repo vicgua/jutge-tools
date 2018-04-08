@@ -1,5 +1,6 @@
 import yaml
 from pathlib import Path
+import pprint
 
 # TODO: For boolean variables, flags with both --x and --no-x should be set
 # Otherwise, if the user defined a value other than the default, it will
@@ -8,12 +9,13 @@ CONFIG_VARIABLES = {
     # cfgpath: (type, argname (None to use default), default value)
     # argname is required if the cfgpath contains something other that
     # valid Python identifiers, ., - and space.
-    # TODO: Nicer config names (e.g.: "p1++ alias" instead of "p1-alias")
 
     # compiler
-    'compiler.cmd': (str, None, 'g++ -o $output $flags $sources'),
+    'compiler.cmd': (str, None, 'g++'),
+    'compiler.make': (str, None, 'make'),
     'compiler.debug': (bool, None, True),
     'compiler.strict': (bool, None, True),
+    'compiler.standard': (str, None, 'c++11'),
 
     # debugger
     'debugger.cmd': (str, None, 'gdb -tui $exe'),
@@ -26,14 +28,16 @@ CONFIG_VARIABLES = {
 
     # shrc
     'shrc.p1++ alias': (bool, 'p1_alias', True),
-    # TODO: Change to allow name customization
-    # 'shrc.p2++ alias': (bool, 'p2_alias', True)  # TODO
+    'shrc.p2++ alias': (bool, 'p2_alias', True),
     'shrc.dl alias': (str, None, 'dl'),
 
     # test
     'test.compile': (bool, None, True),
     'test.diff': (bool, None, True),
-    'test.diff tool': (str, None, 'diff -y $output $correct')
+    'test.diff tool': (str, None, 'diff -y $output $correct'),
+
+    # skel
+    'skel.makefile': (bool, None, False),
 }
 
 class ConfigFile:
@@ -130,7 +134,10 @@ class ConfigFile:
     def __getitem__(self, key):
         ret = getattr(self.override, self.argname(key), None)
         if ret is None:
-            ret = self.cfgpath_get(self.config, key.split('.'))
+            try:
+                ret = self.cfgpath_get(self.config, key.split('.'))
+            except KeyError:
+                ret = None
         try:
             converter, _, default = CONFIG_VARIABLES[key]
         except KeyError:
@@ -153,9 +160,9 @@ class ConfigFile:
         if isinstance(value, required_type):
             return value, True
         try:
-            if required_type == list:
+            if required_type is list:
                 return [value], True
-            if required_type == bool and isinstance(value, str):
+            if required_type is bool and isinstance(value, str):
                 TRUTHY_VALUES = {'1', 'true', 'yes', 't', 'y'}
                 FALSEY_VALUES = {'0', 'false', 'no', 'f', 'n'}
                 if value.lower() in TRUTHY_VALUES:
@@ -200,8 +207,18 @@ class ConfigFile:
             # Key not recognised, and may be deleted (instead of set to None)
             self.cfgpath_del(self.config, key.split('.'))
 
-
-
     def save(self):
         with self.file.open('w') as f:
             yaml.dump(self.config, f, default_flow_style=False)
+
+    def __repr__(self):
+        return '<ConfigFile: override={}, config={}>'.format(self.override,
+            self.config)
+
+    def pformat(self, pprinter=None):
+        if pprinter is None:
+            pprinter = pprint.PrettyPrinter()
+        return '<ConfigFile: override={}, config={}>'.format(
+            pprinter.pformat(self.override),
+            pprinter.pformat(self.config)
+        )

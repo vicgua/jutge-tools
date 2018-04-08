@@ -36,8 +36,7 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
         corfile = inpfile.with_suffix('.cor')
         try:
             inp = inpfile.open('r')
-            out = subprocess.check_output([str(executable)], stdin=inp,
-                                          universal_newlines=True)
+            out = subprocess.check_output([str(executable)], stdin=inp)
         except subprocess.CalledProcessError as ex:
             if verbose:
                 print()

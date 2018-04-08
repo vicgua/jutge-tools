@@ -20,7 +20,7 @@ _header_template = '''\
     '''
 
 _source_template = '''\
-    #include {header}
+    #include "{header}"
 
     // Code
     '''
