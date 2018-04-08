@@ -1,5 +1,6 @@
 import argparse
 import tarfile
+import subprocess
 from pathlib import Path
 from ._aux.config_file import ConfigFile
 from ._aux.errors import TarError as JTTarError  # to avoid confusion with
@@ -16,10 +17,21 @@ def _tar_filter(tarinfo):
     tarinfo.mode = 0o0644  # rw-r--r--
     return tarinfo
 
-def tar(files, output=None):
+def tar(files=None, output=None):
     if output is None:
         with open('program.tar', 'wb') as f:
             return tar(files, f)
+    if not files:
+        if Path('Makefile').is_file():
+            make_cmd = 'make tar'
+            print('> ' + make_cmd)
+            try:
+                subprocess.check_call(make_cmd, shell=True)
+            except subprocess.CalledProcessError as ex:
+                raise JTTarError('make tar failed with status ' +
+                                 str(ex.returncode))
+        else:
+            raise JTTarError('no files specified and no Makefile found')
     try:
         with tarfile.TarFile(fileobj=output, mode='w') as tf:
             for f in files:
@@ -59,7 +71,10 @@ def _setup_parser(parent):
     tar_parser.add_argument(
         dest=ConfigFile.argname('_arg.file'),
         metavar='FILE',
-        nargs='+',
-        help='file to add to the tar archive'
+        nargs='*',
+        help=('file to add to the tar archive. If none are provided, a'
+              ' Makefile should exists which provides `make tar` (such as'
+              ' those created by `jutge-tools skel -mk`). In this case,'
+              ' --output is ignored.')
     )
     return tar_parser
