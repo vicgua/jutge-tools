@@ -1,6 +1,5 @@
 import argparse
 import tarfile
-import stat
 from pathlib import Path
 from ._aux.config_file import ConfigFile
 from ._aux.errors import TarError as JTTarError  # to avoid confusion with
@@ -10,10 +9,11 @@ def _tar_filter(tarinfo):
     """This function gets a TarInfo object and outputs a filtered one.
 
         In this case, the TarInfo ouput will change the UID/GID
-        to those of root and the permission to u=rw-,g=r--,o=r--
+        to those of root and the permission to u=rw,g=r,o=r. Modification
+        time is preserved, though
     """
     tarinfo.uname, tarinfo.uid = tarinfo.gname, tarinfo.gid = ('root', 0)
-    tarinfo.mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+    tarinfo.mode = 0o0644  # rw-r--r--
     return tarinfo
 
 def tar(files, output=None):

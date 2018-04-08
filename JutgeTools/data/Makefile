@@ -6,6 +6,8 @@ include build_conf.mk
 # If your version of GNU tar is not named "tar", use "make TAR=gtar" (for
 # example). Other versions such as BSD tar may also work, though.
 TAR = tar
+TARFLAGS += --owner=0 --group=0 --mode=0644  # Remove author information from
+# the tar archive (modification time is preserved)
 
 # Internal variables to simplify the Makefile
 DEPS.cc = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
@@ -58,7 +60,7 @@ clean:
 exe: $(PROGRAMNAME)
 
 .PHONY: tar
-tar: $(TARFILES)
+tar: $(TARNAME)
 
 %.o: %.cc
 	@$(prepare-build)
@@ -83,9 +85,9 @@ $(PROGRAMNAME): $(OBJECTS)
 $(TARNAME): $(TARFILES)
 	@$(prepare-build)
 ifeq ($(TARAPPEND), true)
-	$(TAR)    $(TARFLAGS) -r -f $@ $?
+	$(TAR) $(TARFLAGS) -r -f $@ $?
 else
-	$(TAR)    $(TARFLAGS) -c -f $@ $^
+	$(TAR) $(TARFLAGS) -c -f $@ $^
 endif
 	@$(call addobject,$@)
 
