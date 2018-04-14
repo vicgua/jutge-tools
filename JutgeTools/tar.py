@@ -23,7 +23,7 @@ def tar(files=None, output=None):
         with open('program.tar', 'wb') as f:
             return tar(files, f)
     if not files:
-        if Path('Makefile').is_file():
+        if Path('Makefile').exists():
             make_cmd = ['make', 'tar']
             print_cmd(make_cmd, shell=False)
             try:

@@ -22,8 +22,20 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
     diff_tpl = Template(diff_tool)
     cwd = Path.cwd()
 
-    executable = cwd / (cwd.name.split('_')[0] + '.x')
-    if compile or not executable.exists():
+    makefile = cwd / 'Makefile'
+    if makefile.exists():
+        try:
+            executable = Path(subprocess.check_output(['make', '_exe_name'],
+                universal_newlines=True))
+        except subprocess.CalledProcessError as ex:
+            raise TestError('could not determine the executable name:'
+                            " 'make _exe_name' exited with status {}."
+                            ' Maybe not a JutgeTools Makefile?')
+        outdated = subprocess.run(['make', '--question']).returncode != 0
+    else:
+        executable = cwd / (cwd.name.split('_')[0] + '.x')
+        outdated = compile or not executable.exists()
+    if outdated:
         try:
             compilef(strict=strict, debug=debug)
         except CompileError as ex:

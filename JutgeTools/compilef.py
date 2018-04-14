@@ -48,7 +48,7 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
 
     cwd = Path.cwd()
 
-    if (cwd / 'Makefile').is_file():
+    if (cwd / 'Makefile').exists():
         make_cmd = [make]
         new_env = {'CXX': compiler, 'CXXFLAGS': ' '.join(flags)}
         print_cmd(make_cmd, shell=False, env=new_env)

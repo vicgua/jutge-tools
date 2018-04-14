@@ -91,4 +91,9 @@ else
 endif
 	@$(call addobject,$@)
 
+# Internal: Used by JutgeTools to get the executable name when testing
+.PHONY: _exe_name
+_exe_name:
+	@printf '$(PROGRAMNAME)'
+
 -include $(BUILD_DIR)/*.d
