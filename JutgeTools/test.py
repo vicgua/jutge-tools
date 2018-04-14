@@ -164,25 +164,45 @@ def _setup_parser(parent):
              ' Specify without extension: `sample1`...'
     )
 
-    test_compile_group = test_parser.add_mutually_exclusive_group()
-    test_compile_group.add_argument(
+    compile_group = test_parser.add_mutually_exclusive_group()
+    compile_group.add_argument(
+        '-c', '--compile',
+        action='store_true',
+        dest=ConfigFile.argname('test.compile'),
+        help='recompile always (ignored with a Makefile) (default)'
+    )
+    compile_group.add_argument(
         '-C', '--no-compile',
         action='store_false',
         dest=ConfigFile.argname('test.compile'),
         help='do not recompile. Ignored if there is not an executable'
     )
-    test_compile_group.add_argument(
+    strict_group = test_parser.add_mutually_exclusive_group()
+    strict_group.add_argument(
+        '--strict',
+        action='store_true',
+        dest=ConfigFile.argname('compiler.strict'),
+        help='compile with the --strict flag'
+    )
+    strict_group.add_argument(
         '--no-strict',
         action='store_false',
         dest=ConfigFile.argname('compiler.strict'),
         help='compile with the --no-strict flag'
     )
 
-    test_parser.add_argument(
+    debug_group = test_parser.add_mutually_exclusive_group()
+    debug_group.add_argument(
+        '--debug',
+        action='store_true',
+        dest=ConfigFile.argname('compiler.debug'),
+        help='compile with --debug (default)'
+    )
+    debug_group.add_argument(
         '--no-debug',
         action='store_false',
         dest=ConfigFile.argname('compiler.debug'),
-        help='test with -DNDEBUG (no effect with --no-compile)'
+        help='compile with --no-debug (no effect with --no-compile)'
     )
 
     test_diff_group = test_parser.add_mutually_exclusive_group()

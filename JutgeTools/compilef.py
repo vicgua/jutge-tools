@@ -106,7 +106,14 @@ def _setup_parser(parent):
     )
     compile_parser.set_defaults(action=_parse_args)
 
-    compile_parser.add_argument(
+    strict_group = compile_parser.add_mutually_exclusive_group()
+    strict_group.add_argument(
+        '--strict',
+        action='store_true',
+        dest=ConfigFile.argname('compiler.strict'),
+        help='use strict flags (default)'
+    )
+    strict_group.add_argument(
         '--no-strict',
         action='store_false',
         dest=ConfigFile.argname('compiler.strict'),
@@ -114,14 +121,16 @@ def _setup_parser(parent):
     )
 
     compile_parser.add_argument(
-        '-c', '--compiler',
+        '--compiler',
         dest=ConfigFile.argname('compiler.cmd'),
+        metavar='COMPILER',
         help='compiler to be used. Must support g++-like flags. Default: g++'
     )
 
     compile_parser.add_argument(
         '--make',
         dest=ConfigFile.argname('compiler.make'),
+        metavar='MAKE',
         help=('name of the make program (in most systems, the default should'
               ' be used; Requires GNU make). Default: make')
     )
@@ -133,8 +142,17 @@ def _setup_parser(parent):
         help='C++ standard'
     )
 
-    compile_parser.add_argument(
-        '--no-debug',
+    debug_group = compile_parser.add_mutually_exclusive_group()
+
+    debug_group.add_argument(
+        '-d', '--debug',
+        action='store_true',
+        dest=ConfigFile.argname('compiler.debug'),
+        help=('include debugging symbols (and add -O2 and other debug flags)'
+              ' (default)')
+    )
+    debug_group.add_argument(
+        '-D', '--no-debug',
         action='store_false',
         dest=ConfigFile.argname('compiler.debug'),
         help='do not include debugging symbols (and add -DNDEBUG -O2)'

@@ -177,18 +177,33 @@ def _setup_parser(parent):
         help='exercise ID. E.g.: P51126_en'
     )
 
-    download_parser.add_argument(
+    keep_zip_group = download_parser.add_mutually_exclusive_group()
+    keep_zip_group.add_argument(
         '-kz', '--keep-zip',
         action='store_true',
         dest=ConfigFile.argname('download.keep zip'),
         help='do not delete the archive after deflatting'
     )
-    download_parser.add_argument(
-        '-kp', '--keep-public', '--keep-public-tar',
+    keep_zip_group.add_argument(
+        '-rz', '--remove-zip',
+        action='store_false',
+        dest=ConfigFile.argname('download.keep zip'),
+        help='opposite of --keep-zip'
+    )
+
+    keep_public_group = download_parser.add_mutually_exclusive_group()
+    keep_public_group.add_argument(
+        '-kp', '--keep-public-tar', '--keep-public',
         action='store_true',
         dest=ConfigFile.argname('download.keep public tar'),
         help='do not delete the public archive after extracting.'
              ' Useless without -p'
+    )
+    keep_public_group.add_argument(
+        '-rp', '--remove-public-tar', '--remove-public',
+        action='store_false',
+        dest=ConfigFile.argname('download.keep public tar'),
+        help='opposite of --keep-public-tar'
     )
 
     parser_skel_group = download_parser.add_mutually_exclusive_group()

@@ -14,7 +14,7 @@ def debug(debugger=None, compile=True, strict=True):
     debugger_tpl = Template(debugger)
     cwd = Path.cwd()
 
-    # TODO: Factor this into its own function
+    # TODO: Factor this into its own function (repeated in .test)
     makefile = cwd / 'Makefile'
     if makefile.exists():
         try:
@@ -63,12 +63,20 @@ def _setup_parser(parent):
     debug_parser.add_argument(
         '-d', '--debugger',
         dest=ConfigFile.argname('debugger.cmd'),
+        metavar='DEBUGGER',
         help='debbugger to be used. "$exe" will be substituted '
              ' (it is already quoted).'
              ' Default: `gdb -tui $exe`'
     )
 
-    debug_parser.add_argument(
+    strict_group = debug_parser.add_mutually_exclusive_group()
+    strict_group.add_argument(
+        '--strict',
+        action='store_true',
+        dest=ConfigFile.argname('compiler.strict'),
+        help='compile with the --strict flag'
+    )
+    strict_group.add_argument(
         '--no-strict',
         action='store_false',
         dest=ConfigFile.argname('compiler.strict'),
