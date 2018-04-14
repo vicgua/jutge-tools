@@ -16,13 +16,13 @@ CONFIG_VARIABLES = {
     'compiler.debug': (bool, None, True),
     'compiler.strict': (bool, None, True),
     'compiler.standard': (str, None, 'c++11'),
+    'compiler.flags': (str, None, ''),
 
     # debugger
     'debugger.cmd': (str, None, 'gdb -tui $exe'),
 
     # download
     'download.keep zip': (bool, None, False),
-    'download.skel': (bool, None, True),
     'download.skel files': (list, None, list),  # If using a callable, it will
     # be called to build the default value
 
@@ -222,3 +222,38 @@ class ConfigFile:
             pprinter.pformat(self.override),
             pprinter.pformat(self.config)
         )
+
+def process_arg(config, key, override):
+    """Process an argument which depends on a config variable.
+        config: The config file to be used, or None (use default values).
+        key: key of the config variable.
+        override: either a) None: use the value on the config or b) the value
+            of the variable (then the config will not be consulted).
+        Returns:
+            override if it's not None;
+            config[key] if config is not None; or
+            default value for key.
+        Precondition: "key" is a valid config variable (else KeyError may
+            be raised).
+    """
+    if override is not None:
+        return override
+    if config is not None:
+        return config[key]
+    return CONFIG_VARIABLES[key][2]  # Default value for 'key'
+
+def process_args(config, values):
+    """Process arguments which depend on a config variable.
+        config: The config file to be used, or None (use default values).
+        values: (key, override) pairs, where "key" is the key of the config
+            variable and "override" is a) None: use the value on the config,
+            or b) the value of the variable (then the config will not be
+            consulted).
+        Returns for each value, in order:
+            override if it's not None;
+            config[key] if config is not None; or
+            default value for key.
+        Precondition: all keys are valid config variables (else KeyError may
+            be raised)
+    """
+    return (process_arg(config, *ko) for ko in values)

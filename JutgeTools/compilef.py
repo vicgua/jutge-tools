@@ -5,7 +5,7 @@ import subprocess
 import os
 from enum import Enum
 from ._aux.errors import CompileError
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
 
 COMPILE_FLAGS = ['-Wall', '-Wextra', '-Werror', '-Wno-uninitialized',
@@ -14,8 +14,10 @@ COMPILE_FLAGS = ['-Wall', '-Wextra', '-Werror', '-Wno-uninitialized',
 VALID_STANDARDS = ('c++98', 'c++03', 'c++11', 'c++14')
 
 # Avoid clash with built-in "compile"
-def compilef(strict=True, debug=True, compiler='g++', make='make',
-             standard='c++11', sources=None, flags=''):
+# def compilef(strict=True, debug=True, compiler='g++', make='make',
+            #  standard='c++11', sources=None, flags='', *, config=None):
+def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
+                flags='', sources=None, *, config=None):
     """Compile a problem.
         strict: Whether to enable strict checks (-Werror...)
         debug: Whether to enable debug output (-g, -O0...)
@@ -30,6 +32,15 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
         flags: A string of additional flags to be added before
                 JutgeTools' flags
         """
+    args = [
+        ('compiler.cmd', compiler),
+        ('compiler.make', make),
+        ('compiler.debug', debug),
+        ('compiler.strict', strict),
+        ('compiler.standard', standard),
+        ('compiler.flags', flags)
+    ]
+    compiler, make, debug, strict, standard, flags = process_args(config, args)
     print('Compiling...')
     if sources is None:
         sources = []
@@ -86,16 +97,8 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
     print('Compiled successfully')
 
 def _parse_args(config):
-    d = {
-        'strict': config['compiler.strict'],
-        'debug': config['compiler.debug'],
-        'compiler': config['compiler.cmd'],
-        'standard': config['compiler.standard'],
-        'sources': config['_arg.sources']
-    }
-
     def exc():
-        return compilef(**d)
+        return compilef(config=config, sources=config['_arg.sources'])
     return exc
 
 def _setup_parser(parent):

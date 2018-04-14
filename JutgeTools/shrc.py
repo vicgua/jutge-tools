@@ -1,10 +1,10 @@
 from enum import Enum
-from shlex import quote, split
+import shlex
 import sys
 import os.path
 from textwrap import dedent as _dedent
 from .compilef import COMPILE_FLAGS
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_args
 
 class Shells(Enum):
     BASH = 1
@@ -21,7 +21,7 @@ class Shells(Enum):
 
 def _create_alias(shell, name, action):
     if shell in (Shells.BASH, Shells.ZSH, Shells.FISH):
-        return 'alias {n}={a}'.format(n=name, a=quote(action))
+        return 'alias {n}={a}'.format(n=name, a=shlex.quote(action))
     elif shell == Shells.TCSH:
         return 'alias {n} {a}'.format(n=name, a=action)
 
@@ -62,8 +62,15 @@ def _header(shell, comment):
         # colon
         return ':;: {} :;:'.format(comment)
 
-def shrc(shell, quiet=False, alias=None, p1_alias=None, p2_alias=None,
-         dl_alias=None, compiler='g++'):
+def shrc(shell, quiet=False, p1_alias=None, p2_alias=None,
+         dl_alias=None, compiler=None, *, config=None):
+    args = [
+        ('shrc.p1++ alias', p1_alias),
+        ('shrc.p2++ alias', p2_alias),
+        ('shrc.dl alias', dl_alias),
+        ('compiler.cmd', compiler)
+    ]
+    p1_alias, p2_alias, dl_alias, compiler = process_args(config, args)
     if not quiet:
         print('Append the following to {}:'.format(_SHELL_CONFIGS[shell]),
                 file=sys.stderr)
@@ -86,14 +93,10 @@ def _parse_args(config):
     d = {
         'shell': config['_arg.shell'],
         'quiet': config['_arg.quiet'],
-        'compiler': split(config['compiler.cmd'])[0],
-        'p1_alias': config['shrc.p1++ alias'],
-        'p2_alias': config['shrc.p2++ alias'],
-        'dl_alias': config['shrc.dl alias']
     }
 
     def exc():
-        return shrc(**d)
+        return shrc(config=config, **d)
     return exc
 
 def _setup_parser(parent):

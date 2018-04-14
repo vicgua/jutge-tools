@@ -4,7 +4,7 @@ from pathlib import Path
 from zipfile import ZipFile, BadZipfile
 from ._aux.errors import DownloadError
 from .skel import skel
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_args
 from tarfile import TarFile, TarError
 
 # TODO: join _download{,_cpp,_public_tar} in a single function, to avoid
@@ -61,8 +61,13 @@ def _download_public_tar(exercise):
                 ex.code, ex.reason
             ))
 
-def download(exercise, keep_zip=False, cc=False, public_tar=False,
-             keep_public_tar=False, skel_files=-1):
+def download(exercise, keep_zip=None, cc=False, public_tar=False,
+             keep_public_tar=None, skel_files=None, *, config=None):
+    args = [
+        ('download.keep zip', keep_zip),
+        ('download.skel files', skel_files)
+    ]
+    keep_zip, skel_files = process_args(config, args)
     cwd = Path.cwd()
     zipf = cwd / (exercise + '.zip')
 
@@ -132,8 +137,6 @@ def download(exercise, keep_zip=False, cc=False, public_tar=False,
         return
 
     print('Creating skel files')
-    if skel_files == -1 or not skel_files:
-        skel_files = None
     skel(exercise, skel_files)
 
 
@@ -148,19 +151,15 @@ def _print_dest(exc):
 def _parse_args(config):
     d = {
         'exercise': config['_arg.exercise'],
-        'keep_zip': config['download.keep zip'],
         'cc': config['_arg.cc'],
         'public_tar': config['_arg.public tar'],
-        'keep_public_tar': config['download.keep public tar'],
-        'skel_files': (config['download.skel files']
-            if config['download.skel'] else None)
     }
 
     def exc():
         if config['_arg.get-dest']:
             _print_dest(d['exercise'])
             return
-        return download(**d)
+        return download(config=config, **d)
     return exc
 
 def _setup_parser(parent):
@@ -223,8 +222,9 @@ def _setup_parser(parent):
     )
     parser_skel_group.add_argument(
         '-S', '--no-skel',
-        action='store_false',
-        dest=ConfigFile.argname('download.skel'),
+        action='store_const',
+        const=[],
+        dest=ConfigFile.argname('download.skel files'),
         help='do not create a skel file'
     )
 

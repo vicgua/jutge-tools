@@ -7,7 +7,7 @@ import os
 import signal
 from .compilef import compilef
 from ._aux.errors import TestError, CompileError
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
 
 # Ugly hack to get signal name from signal code
@@ -16,7 +16,15 @@ SIGNALS = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
 
 # TODO: Avoid passing arguments to compiler, use instead config
 def test(cases=None, compile=True, strict=True, debug=True, diff=True,
-         diff_tool=None, verbose=False):
+         diff_tool=None, verbose=False, *, config=None):
+    args = [
+        ('compiler.strict', strict),
+        ('compiler.debug', debug),
+        ('test.compile', compile),
+        ('test.diff', diff),
+        ('test.diff tool', diff_tool)
+    ]
+    strict, debug, compile, diff, diff_tool = process_args(config, args)
     if diff_tool is None:
         diff_tool = 'diff -y $output $correct'
     diff_tpl = Template(diff_tool)
@@ -135,16 +143,11 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
 def _parse_args(config):
     d = {
         'cases': config['_arg.cases'],
-        'compile': config['test.compile'],
-        'strict': config['compiler.strict'],
-        'debug': config['compiler.debug'],
-        'diff': config['test.diff'],
-        'diff_tool': config['test.diff tool'],
         'verbose': True
     }
 
     def exc():
-        return test(**d)
+        return test(config=config, **d)
     return exc
 
 def _setup_parser(parent):

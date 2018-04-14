@@ -4,13 +4,11 @@ import subprocess
 import shlex
 from ._aux.errors import DebugError, CompileError
 from .compilef import compilef
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_arg
 from ._aux.print_cmd import print_cmd
 
-# TODO: Avoid passing arguments to compiler, use instead config
-def debug(debugger=None, compile=True, strict=True):
-    if debugger is None:
-        debugger = 'gdb -tui $exe'  # GDB with GUI
+def debug(debugger=None, *, config=None):
+    debugger = process_arg(config, 'debugger.cmd', debugger)
     debugger_tpl = Template(debugger)
     cwd = Path.cwd()
 
@@ -43,13 +41,8 @@ def debug(debugger=None, compile=True, strict=True):
     subprocess.call(debugger_cmd, shell=True)
 
 def _parse_args(config):
-    d = {
-        'debugger': config['debugger.cmd'],
-        'strict': config['compiler.strict']
-    }
-
     def exc():
-        return debug(**d)
+        return debug(config=config)
     return exc
 
 def _setup_parser(parent):

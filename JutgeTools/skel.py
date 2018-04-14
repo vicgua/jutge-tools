@@ -4,7 +4,7 @@ import shlex
 import pkg_resources
 from ._aux.errors import SkelError
 from ._aux.file_templates import *
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_arg
 
 def _transform_file_list(l, root, extension=None):
     '''Transform a list of Paths to a list of strings
@@ -19,7 +19,8 @@ def _transform_file_list(l, root, extension=None):
     return ' '.join(map(str, map(lambda p: p.relative_to(root), l)))
 
 
-def skel(dirname=None, files=None, makefile=False):
+def skel(dirname=None, files=None, makefile=None, *, config=None):
+    makefile = process_arg(config, 'skel.makefile', makefile)
     if dirname is not None:
         dest = Path.cwd() / dirname
         if dest.exists() and not dest.is_dir():
@@ -84,11 +85,10 @@ def _parse_args(config):
     d = {
         'dirname': config['_arg.dest'],
         'files': config['_arg.files'],
-        'makefile': config['skel.makefile']
     }
 
     def exc():
-        return skel(**d)
+        return skel(config=config, **d)
     return exc
 
 def _setup_parser(parent):
