@@ -101,7 +101,7 @@ def _parse_args(config):
         return compilef(config=config, sources=config['_arg.sources'])
     return exc
 
-def _setup_parser(parent):
+def _setup_parser(parent, global_options):
     compile_parser = parent.add_parser(
         'compile', aliases=['c'],
         description='Compile the exercise in the current dir.',
@@ -109,7 +109,16 @@ def _setup_parser(parent):
     )
     compile_parser.set_defaults(action=_parse_args)
 
-    strict_group = compile_parser.add_mutually_exclusive_group()
+    compile_parser.add_argument(
+        ConfigFile.argname('_arg.sources'),
+        metavar='source',
+        nargs='*',
+        help='if specified, only these files will be compiled'
+    )
+
+    # Add the following options to the top-level parser, since they may be
+    # needed when test or debug recompile the problem.
+    strict_group = global_options.add_mutually_exclusive_group()
     strict_group.add_argument(
         '--strict',
         action='store_true',
@@ -123,14 +132,14 @@ def _setup_parser(parent):
         help='do not use strict flags'
     )
 
-    compile_parser.add_argument(
+    global_options.add_argument(
         '--compiler',
         dest=ConfigFile.argname('compiler.cmd'),
         metavar='COMPILER',
         help='compiler to be used. Must support g++-like flags. Default: g++'
     )
 
-    compile_parser.add_argument(
+    global_options.add_argument(
         '--make',
         dest=ConfigFile.argname('compiler.make'),
         metavar='MAKE',
@@ -138,14 +147,14 @@ def _setup_parser(parent):
               ' be used; Requires GNU make). Default: make')
     )
 
-    compile_parser.add_argument(
+    global_options.add_argument(
         '-std', '--standard',
         choices=VALID_STANDARDS,
         dest=ConfigFile.argname('compiler.standard'),
         help='C++ standard'
     )
 
-    debug_group = compile_parser.add_mutually_exclusive_group()
+    debug_group = global_options.add_mutually_exclusive_group()
 
     debug_group.add_argument(
         '-d', '--debug',
@@ -159,13 +168,6 @@ def _setup_parser(parent):
         action='store_false',
         dest=ConfigFile.argname('compiler.debug'),
         help='do not include debugging symbols (and add -DNDEBUG -O2)'
-    )
-
-    compile_parser.add_argument(
-        ConfigFile.argname('_arg.sources'),
-        metavar='source',
-        nargs='*',
-        help='if specified, only these files will be compiled'
     )
 
     return compile_parser

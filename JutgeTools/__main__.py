@@ -36,9 +36,15 @@ def main():
     subparsers = parser.add_subparsers(
         title='actions'
     )
+    global_options = parser.add_argument_group(
+        title='global options',
+        description=('These options affect more than one command. E.g.:'
+                     ' compile flags are used when "test" and "debug" compile'
+                     ' the problem.')
+    )
 
     download_parser = download_sp(subparsers)
-    compile_parser = compile_sp(subparsers)
+    compile_parser = compile_sp(subparsers, global_options)
     test_parser = test_sp(subparsers)
     debug_parser = debug_sp(subparsers)
     skel_parser = skel_sp(subparsers)
