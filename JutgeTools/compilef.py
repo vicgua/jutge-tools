@@ -2,18 +2,20 @@ from string import Template
 from pathlib import Path
 import shlex
 import subprocess
+import os
 from enum import Enum
 from ._aux.errors import CompileError
 from ._aux.config_file import ConfigFile
+from ._aux.print_cmd import print_cmd
 
-COMPILE_FLAGS = ('-Wall -Wextra -Werror -Wno-uninitialized'
-                 ' -Wno-sign-compare -Wshadow')
+COMPILE_FLAGS = ['-Wall', '-Wextra', '-Werror', '-Wno-uninitialized',
+                 '-Wno-sign-compare', '-Wshadow']
 
 VALID_STANDARDS = ('c++98', 'c++03', 'c++11', 'c++14')
 
 # Avoid clash with built-in "compile"
 def compilef(strict=True, debug=True, compiler='g++', make='make',
-             standard='c++11', sources=None):
+             standard='c++11', sources=None, flags=''):
     """Compile a problem.
         strict: Whether to enable strict checks (-Werror...)
         debug: Whether to enable debug output (-g, -O0...)
@@ -25,6 +27,8 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
                 - Empty: compile all *.cc files.
             - With a Makefile: the name of the *targets* to compile.
                 - Empty: use the default target (usually "all")
+        flags: A string of additional flags to be added before
+                JutgeTools' flags
         """
     print('Compiling...')
     if sources is None:
@@ -32,31 +36,27 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
     if standard not in VALID_STANDARDS:
         raise ValueError(standard + ' is not a recognised standard. Valid'
                                     ' values are ' + str(VALID_STANDARDS))
-    flags = ['-std=' + str(standard)]
+    flags = shlex.split(flags)
+    flags += ['-std=' + str(standard)]
     if debug:
-        flags += shlex.split('-g -D_GLIBCXX_DEBUG -O0')
+        flags += ['-g', '-D_GLIBCXX_DEBUG', '-O0']
     else:
-        flags += shlex.split('-DNDEBUG -O2')
+        flags += ['-DNDEBUG', '-O2']
 
     if strict:
-        flags += shlex.split(COMPILE_FLAGS)
+        flags += COMPILE_FLAGS
 
     cwd = Path.cwd()
 
     if (cwd / 'Makefile').is_file():
-        make_tpl = '{make} CXX={compiler} CXXFLAGS={flags}'
-        if sources:
-            make_tpl += ' {sources}'
-        make_cmd = make_tpl.format(
-            make=make,
-            compiler=shlex.quote(compiler),
-            flags=shlex.quote(' '.join(flags)),
-            sources=' '.join(sources)
-        )
-
-        print('> ' + make_cmd)
+        make_cmd = [make]
+        new_env = {'CXX': compiler, 'CXXFLAGS': ' '.join(flags)}
+        print_cmd(make_cmd, shell=False, env=new_env)
         try:
-            subprocess.check_call(make_cmd, shell=True)
+            # {**os.environ, 'CXX': compiler,
+            # 'CXXFLAGS': ' '.join(flags)}  # (Python >= 3.5)
+            subprocess.check_call(make_cmd, shell=False,
+                env=dict(os.environ, **new_env))
         except subprocess.CalledProcessError as ex:
             raise CompileError('make exited with status ' +
                                str(ex.returncode))
@@ -67,21 +67,18 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
         if not sources:
             raise CompileError('no C++ files (must end in .cc)')
         compiler_tpl = '{compiler} {flags} -o {output} {sources}'
-        output = Path(cwd.name.split('_')[0]).with_suffix('.x')
 
-
-        sources_subs = map(lambda f: shlex.quote(str(Path(f).relative_to(cwd))),
+        sources_subs = map(lambda f: str(Path(f).relative_to(cwd)),
                             sources)
 
-        compiler_cmd = compiler_tpl.format(
-            compiler=compiler, output=shlex.quote(str(output)),
-            flags=' '.join(flags),
-            sources=' '.join(sources_subs)
-        )
+        # compiler_cmd = [compiler, *flags, '-o', str(output),
+        #                 *sources_subs]  # (Python >= 3.5)
+        compiler_cmd = ([compiler] + flags + ['-o', str(output)] +
+                        sources_subs)
 
-        print('> ' + compiler_cmd)
+        print_cmd(compiler_cmd, shell=False)
         try:
-            subprocess.check_call(compiler_cmd, shell=True)
+            subprocess.check_call(compiler_cmd, shell=False)
         except subprocess.CalledProcessError as ex:
             raise CompileError('compiled exited with status ' +
                             str(ex.returncode))

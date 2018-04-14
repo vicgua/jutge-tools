@@ -5,6 +5,7 @@ from pathlib import Path
 from ._aux.config_file import ConfigFile
 from ._aux.errors import TarError as JTTarError  # to avoid confusion with
                                                  # tarfile.TarError
+from ._aux.print_cmd import print_cmd
 
 def _tar_filter(tarinfo):
     """This function gets a TarInfo object and outputs a filtered one.
@@ -23,10 +24,10 @@ def tar(files=None, output=None):
             return tar(files, f)
     if not files:
         if Path('Makefile').is_file():
-            make_cmd = 'make tar'
-            print('> ' + make_cmd)
+            make_cmd = ['make', 'tar']
+            print_cmd(make_cmd, shell=False)
             try:
-                subprocess.check_call(make_cmd, shell=True)
+                subprocess.check_call(make_cmd, shell=False)
             except subprocess.CalledProcessError as ex:
                 raise JTTarError('make tar failed with status ' +
                                  str(ex.returncode))

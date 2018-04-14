@@ -8,6 +8,7 @@ import signal
 from .compilef import compilef
 from ._aux.errors import TestError, CompileError
 from ._aux.config_file import ConfigFile
+from ._aux.print_cmd import print_cmd
 
 # Ugly hack to get signal name from signal code
 SIGNALS = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
@@ -63,7 +64,7 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
                 if ex.returncode < 0:
                     msg += (
                         ' (signal ' +
-                        SIGNALS.get(-ex.returncode, "unknown signal") + ')'
+                        SIGNALS.get(-ex.returncode, str(-ex.returncode)) + ')'
                     )
                 else:
                     msg += ' (' + os.strerror(ex.returncode) + ')'
@@ -106,15 +107,12 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
         out.close()
         cor.close()
 
-    try:
-        diff_command = diff_tpl.substitute(
-            output=shlex.quote(str(all_output)),
-            correct=shlex.quote(str(all_correct))
-        )
-    except KeyError as ex:
-        raise TestError('{} is not a valid variable'.format(ex))
+    diff_command = diff_tpl.safe_substitute(
+        output=shlex.quote(str(all_output)),
+        correct=shlex.quote(str(all_correct))
+    )
 
-    print('> ' + diff_command)
+    print_cmd(diff_command, shell=True)
     subprocess.call(diff_command, shell=True)
 
     all_output.unlink()

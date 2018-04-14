@@ -5,6 +5,7 @@ import shlex
 from ._aux.errors import DebugError, CompileError
 from .compilef import compilef
 from ._aux.config_file import ConfigFile
+from ._aux.print_cmd import print_cmd
 
 # TODO: Avoid passing arguments to compiler, use instead config
 def debug(debugger=None, compile=True, strict=True):
@@ -21,14 +22,11 @@ def debug(debugger=None, compile=True, strict=True):
             raise DebugError(ex) from ex
     assert(executable.exists())
 
-    try:
-        debugger_cmd = debugger_tpl.substitute(
-            exe=shlex.quote(str(executable))
-        )
-    except KeyError as ex:
-        raise DebugError('{} is not a valid variable'.format(ex))
+    debugger_cmd = debugger_tpl.safe_substitute(
+        exe=shlex.quote(str(executable))
+    )
     print('Starting debugger')
-    print('> ' + debugger_cmd)
+    print_cmd(debugger_cmd, shell=True)
     subprocess.call(debugger_cmd, shell=True)
 
 def _parse_args(config):
