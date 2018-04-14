@@ -14,12 +14,25 @@ def debug(debugger=None, compile=True, strict=True):
     debugger_tpl = Template(debugger)
     cwd = Path.cwd()
 
-    executable = cwd / (cwd.name.split('_')[0] + '.x')
-    if compile or not executable.exists():
+    # TODO: Factor this into its own function
+    makefile = cwd / 'Makefile'
+    if makefile.exists():
         try:
-            compilef(strict=strict)
+            executable = Path(subprocess.check_output(['make', '_exe_name'],
+                universal_newlines=True))
+        except subprocess.CalledProcessError as ex:
+            raise TestError('could not determine the executable name:'
+                            " 'make _exe_name' exited with status {}."
+                            ' Maybe not a JutgeTools Makefile?')
+        outdated = subprocess.run(['make', '--question']).returncode != 0
+    else:
+        executable = cwd / (cwd.name.split('_')[0] + '.x')
+        outdated = compile or not executable.exists()
+    if outdated:
+        try:
+            compilef(strict=strict, debug=debug)
         except CompileError as ex:
-            raise DebugError(ex) from ex
+            raise TestError(ex) from ex
     assert(executable.exists())
 
     debugger_cmd = debugger_tpl.safe_substitute(

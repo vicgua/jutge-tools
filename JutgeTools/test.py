@@ -22,6 +22,7 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
     diff_tpl = Template(diff_tool)
     cwd = Path.cwd()
 
+    # TODO: Factor this into its own function (repeated in .debug)
     makefile = cwd / 'Makefile'
     if makefile.exists():
         try:
