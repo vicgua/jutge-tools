@@ -66,7 +66,7 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
             sources = list(cwd.glob('*.cc'))
         if not sources:
             raise CompileError('no C++ files (must end in .cc)')
-        compiler_tpl = '{compiler} {flags} -o {output} {sources}'
+        output = Path(cwd.name.split('_')[0]).with_suffix('.x')
 
         sources_subs = map(lambda f: str(Path(f).relative_to(cwd)),
                             sources)
@@ -74,7 +74,7 @@ def compilef(strict=True, debug=True, compiler='g++', make='make',
         # compiler_cmd = [compiler, *flags, '-o', str(output),
         #                 *sources_subs]  # (Python >= 3.5)
         compiler_cmd = ([compiler] + flags + ['-o', str(output)] +
-                        sources_subs)
+                        list(sources_subs))
 
         print_cmd(compiler_cmd, shell=False)
         try:

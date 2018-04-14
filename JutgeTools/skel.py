@@ -118,7 +118,7 @@ def _setup_parser(parent):
         action='store_false',
         dest=ConfigFile.argname('skel.makefile'),
         help=('do not use a Makefile (this is the default, use to override '
-                'config')
+                'config)')
     )
     makefile_group.add_argument(
         '-mk', '--makefile',
