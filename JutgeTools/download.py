@@ -7,13 +7,9 @@ from .skel import skel
 from ._aux.config_file import ConfigFile, process_args
 from tarfile import TarFile, TarError
 
-# TODO: join _download{,_cpp,_public_tar} in a single function, to avoid
-# repeating yourself
-
-def _download(exercise):
-    url = "https://jutge.org/problems/{}/zip".format(exercise)
+def _download(url, dest):
     print('Downloading ' + url)
-    with open(exercise + '.zip', 'wb') as dest:
+    with dest.open('wb') as dest:
         try:
             orig = urlopen(url)
             data = orig.read(128)
@@ -26,40 +22,6 @@ def _download(exercise):
             ))
         finally:
             orig.close()
-
-def _download_cpp(exercise):
-    url = "https://jutge.org/problems/{}/main/cc".format(exercise)
-    print('Downloading ' + url)
-    path = Path.cwd() / exercise / 'main.cc'
-    with path.open('wb') as dest:
-        try:
-            orig = urlopen(url)
-            data = orig.read(128)
-            while data:
-                dest.write(data)
-                data = orig.read(128)
-        except HTTPError as ex:
-            raise DownloadError('download failed with code {} {}'.format(
-                ex.code, ex.reason
-            ))
-        finally:
-            orig.close()
-
-def _download_public_tar(exercise):
-    url = "https://jutge.org/problems/{}/public.tar".format(exercise)
-    print('Downloading ' + url)
-    path = Path.cwd() / exercise / 'public.tar'
-    with path.open('wb') as dest:
-        try:
-            orig = urlopen(url)
-            data = orig.read(128)
-            while data:
-                dest.write(data)
-                data = orig.read(128)
-        except HTTPError as ex:
-            raise DownloadError('download failed with code {} {}'.format(
-                ex.code, ex.reason
-            ))
 
 def download(exercise, keep_zip=None, cc=False, public_tar=False,
              keep_public_tar=None, skel_files=None, *, config=None):
@@ -75,7 +37,8 @@ def download(exercise, keep_zip=None, cc=False, public_tar=False,
         print(str(zipf.relative_to(cwd)) + ' exists, skipping download')
         zip_downloaded = False
     else:
-        _download(exercise)
+        zipurl = "https://jutge.org/problems/{}/zip".format(exercise)
+        _download(zipurl, zipf)
         zip_downloaded = True
     assert zipf.exists()
 
@@ -103,7 +66,8 @@ def download(exercise, keep_zip=None, cc=False, public_tar=False,
         zipf.unlink()
 
     if cc:
-        _download_cpp(exercise)
+        ccurl = "https://jutge.org/problems/{}/main/cc".format(exercise)
+        _download(ccurl, Path.cwd() / exercise / 'main.cc')
         return
 
     if public_tar:
@@ -112,7 +76,8 @@ def download(exercise, keep_zip=None, cc=False, public_tar=False,
             print(str(tarf.relative_to(cwd)) + ' exists, skipping download')
             tar_downloaded = False
         else:
-            _download_public_tar(exercise)
+            tarurl = "https://jutge.org/problems/{}/public.tar".format(exercise)
+            _download(tarurl, tarf)
             tar_downloaded = True
         assert tarf.exists()
 
@@ -149,17 +114,16 @@ def _print_dest(exc):
         print('.')  # Default to current dir ('.')
 
 def _parse_args(config):
-    d = {
-        'exercise': config['_arg.exercise'],
-        'cc': config['_arg.cc'],
-        'public_tar': config['_arg.public tar'],
-    }
-
     def exc():
         if config['_arg.get-dest']:
             _print_dest(d['exercise'])
             return
-        return download(config=config, **d)
+        return download(
+            exercise=config['_arg.exercise'],
+            cc=config['_arg.cc'],
+            public_tar=config['_arg.public-tar']
+            config=config
+        )
     return exc
 
 def _setup_parser(parent):
@@ -231,7 +195,7 @@ def _setup_parser(parent):
     download_parser.add_argument(
         '-p', '--public', '--public-tar',
         action='store_true',
-        dest=ConfigFile.argname('_arg.public tar'),
+        dest=ConfigFile.argname('_arg.public-tar'),
         help='download the public files of the exercise (public.tar)'
     )
 

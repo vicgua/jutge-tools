@@ -82,13 +82,12 @@ def skel(dirname=None, files=None, makefile=None, *, config=None):
 
 
 def _parse_args(config):
-    d = {
-        'dirname': config['_arg.dest'],
-        'files': config['_arg.files'],
-    }
-
     def exc():
-        return skel(config=config, **d)
+        return skel(
+            dirname=config['_arg.dest'],
+            files=config['_arg.files'],
+            config=config
+        )
     return exc
 
 def _setup_parser(parent):

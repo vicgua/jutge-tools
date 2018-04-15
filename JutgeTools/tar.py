@@ -2,10 +2,12 @@ import argparse
 import tarfile
 import subprocess
 from pathlib import Path
-from ._aux.config_file import ConfigFile
+from ._aux.config_file import ConfigFile, process_arg
 from ._aux.errors import TarError as JTTarError  # to avoid confusion with
                                                  # tarfile.TarError
+from ._aux.errors import MakeError
 from ._aux.print_cmd import print_cmd
+from ._aux.make import Makefile
 
 def _tar_filter(tarinfo):
     """This function gets a TarInfo object and outputs a filtered one.
@@ -18,19 +20,20 @@ def _tar_filter(tarinfo):
     tarinfo.mode = 0o0644  # rw-r--r--
     return tarinfo
 
-def tar(files=None, output=None):
+def tar(files=None, output=None, make=None, *, config=None):
+    make = process_arg(config, 'compiler.make', make)
     if output is None:
         with open('program.tar', 'wb') as f:
             return tar(files, f)
     if not files:
         if Path('Makefile').exists():
-            make_cmd = ['make', 'tar']
-            print_cmd(make_cmd, shell=False)
+            makefile = Makefile(make, Path('Makefile'))
             try:
-                subprocess.check_call(make_cmd, shell=False)
-            except subprocess.CalledProcessError as ex:
+                makefile.make_target('tar', verbose=True)
+            except MakeError as ex:
                 raise JTTarError('make tar failed with status ' +
                                  str(ex.returncode))
+            return
         else:
             raise JTTarError('no files specified and no Makefile found')
     try:
@@ -43,13 +46,12 @@ def tar(files=None, output=None):
         raise JTTarError('tar error: {}'.format(ex))
 
 def _parse_args(config):
-    d = {
-        'files': config['_arg.file'],
-        'output': config['_arg.output']
-    }
-
     def exc():
-        return tar(**d)
+        return tar(
+            files=config['_arg.file'],
+            output=config['_arg.output'],
+            config=config
+        )
     return exc
 
 def _setup_parser(parent):

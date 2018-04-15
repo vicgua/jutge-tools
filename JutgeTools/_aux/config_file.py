@@ -2,9 +2,6 @@ import yaml
 from pathlib import Path
 import pprint
 
-# TODO: For boolean variables, flags with both --x and --no-x should be set
-# Otherwise, if the user defined a value other than the default, it will
-# always be used
 CONFIG_VARIABLES = {
     # cfgpath: (type, argname (None to use default), default value)
     # argname is required if the cfgpath contains something other that

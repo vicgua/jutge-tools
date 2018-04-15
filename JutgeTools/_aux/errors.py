@@ -1,3 +1,8 @@
+class MakeError(Exception):
+    def __init__(self, *args, returncode=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.returncode = returncode
+
 class ProcessError(Exception):
     pass
 

@@ -5,7 +5,7 @@ from collections import namedtuple
 import shlex
 import os
 import signal
-from .compilef import compilef
+from .compilef import compilef, make_get_info
 from ._aux.errors import TestError, CompileError
 from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
@@ -14,39 +14,31 @@ from ._aux.print_cmd import print_cmd
 SIGNALS = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
      if v.startswith('SIG') and not v.startswith('SIG_'))
 
-# TODO: Avoid passing arguments to compiler, use instead config
-def test(cases=None, compile=True, strict=True, debug=True, diff=True,
-         diff_tool=None, verbose=False, *, config=None):
+def test(cases=None, compile=None, diff=True, diff_tool=None,
+         verbose=False, make=None, *, config=None):
     args = [
-        ('compiler.strict', strict),
-        ('compiler.debug', debug),
         ('test.compile', compile),
         ('test.diff', diff),
-        ('test.diff tool', diff_tool)
+        ('test.diff tool', diff_tool),
+        ('compiler.make', make)
     ]
-    strict, debug, compile, diff, diff_tool = process_args(config, args)
+    compile, diff, diff_tool, make = process_args(config, args)
     if diff_tool is None:
         diff_tool = 'diff -y $output $correct'
     diff_tpl = Template(diff_tool)
     cwd = Path.cwd()
 
-    # TODO: Factor this into its own function (repeated in .debug)
-    makefile = cwd / 'Makefile'
     if makefile.exists():
         try:
-            executable = Path(subprocess.check_output(['make', '_exe_name'],
-                universal_newlines=True))
-        except subprocess.CalledProcessError as ex:
-            raise TestError('could not determine the executable name:'
-                            " 'make _exe_name' exited with status {}."
-                            ' Maybe not a JutgeTools Makefile?')
-        outdated = subprocess.run(['make', '--question']).returncode != 0
+            executable, outdated = make_get_info(make, makefile)
+        except CompileError as ex:
+            raise TestError(ex)
     else:
         executable = cwd / (cwd.name.split('_')[0] + '.x')
         outdated = compile or not executable.exists()
     if outdated:
         try:
-            compilef(strict=strict, debug=debug)
+            compilef(config=config)
         except CompileError as ex:
             raise TestError(ex) from ex
     assert(executable.exists())
@@ -141,13 +133,12 @@ def test(cases=None, compile=True, strict=True, debug=True, diff=True,
 
 
 def _parse_args(config):
-    d = {
-        'cases': config['_arg.cases'],
-        'verbose': True
-    }
-
     def exc():
-        return test(config=config, **d)
+        return test(
+            cases=config['_arg.cases'],
+            verbose=True,
+            config=config
+        )
     return exc
 
 def _setup_parser(parent):

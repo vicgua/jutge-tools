@@ -90,13 +90,12 @@ def shrc(shell, quiet=False, p1_alias=None, p2_alias=None,
 
 
 def _parse_args(config):
-    d = {
-        'shell': config['_arg.shell'],
-        'quiet': config['_arg.quiet'],
-    }
-
     def exc():
-        return shrc(config=config, **d)
+        return shrc(
+            shell=config['_arg.shell'],
+            quiet=config['_arg.quiet'],
+            config=config
+        )
     return exc
 
 def _setup_parser(parent):

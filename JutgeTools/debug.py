@@ -2,35 +2,34 @@ from string import Template
 from pathlib import Path
 import subprocess
 import shlex
-from ._aux.errors import DebugError, CompileError
-from .compilef import compilef
-from ._aux.config_file import ConfigFile, process_arg
+from ._aux.errors import DebugError, CompileError, MakeError
+from .compilef import compilef, make_get_info
+from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
+from ._aux.make import Makefile
 
-def debug(debugger=None, *, config=None):
-    debugger = process_arg(config, 'debugger.cmd', debugger)
+def debug(debugger=None, make=None, *, config=None):
+    args = [
+        ('debugger.cmd', debugger),
+        ('compiler.make', make)
+    ]
+    debugger, make = process_args(config, args)
     debugger_tpl = Template(debugger)
     cwd = Path.cwd()
 
-    # TODO: Factor this into its own function (repeated in .test)
-    makefile = cwd / 'Makefile'
     if makefile.exists():
         try:
-            executable = Path(subprocess.check_output(['make', '_exe_name'],
-                universal_newlines=True))
-        except subprocess.CalledProcessError as ex:
-            raise TestError('could not determine the executable name:'
-                            " 'make _exe_name' exited with status {}."
-                            ' Maybe not a JutgeTools Makefile?')
-        outdated = subprocess.run(['make', '--question']).returncode != 0
+            executable, outdated = make_get_info(make, makefile)
+        except CompileError as ex:
+            raise DebugError(ex)
     else:
         executable = cwd / (cwd.name.split('_')[0] + '.x')
         outdated = compile or not executable.exists()
     if outdated:
         try:
-            compilef(strict=strict, debug=debug)
+            compilef(config=config)
         except CompileError as ex:
-            raise TestError(ex) from ex
+            raise DebugError(ex) from ex
     assert(executable.exists())
 
     debugger_cmd = debugger_tpl.safe_substitute(

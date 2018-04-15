@@ -4,9 +4,10 @@ import shlex
 import subprocess
 import os
 from enum import Enum
-from ._aux.errors import CompileError
+from ._aux.errors import CompileError, MakeError
 from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
+from ._aux.make import Makefile
 
 COMPILE_FLAGS = ['-Wall', '-Wextra', '-Werror', '-Wno-uninitialized',
                  '-Wno-sign-compare', '-Wshadow']
@@ -60,14 +61,10 @@ def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
     cwd = Path.cwd()
 
     if (cwd / 'Makefile').exists():
-        make_cmd = [make]
+        makefile = Makefile(make, cwd / 'Makefile')
         new_env = {'CXX': compiler, 'CXXFLAGS': ' '.join(flags)}
-        print_cmd(make_cmd, shell=False, env=new_env)
         try:
-            # {**os.environ, 'CXX': compiler,
-            # 'CXXFLAGS': ' '.join(flags)}  # (Python >= 3.5)
-            subprocess.check_call(make_cmd, shell=False,
-                env=dict(os.environ, **new_env))
+            makefile.make_all(env=new_env, verbose=True)
         except subprocess.CalledProcessError as ex:
             raise CompileError('make exited with status ' +
                                str(ex.returncode))
@@ -95,6 +92,18 @@ def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
                             str(ex.returncode))
 
     print('Compiled successfully')
+
+def make_get_info(make_path, makefile):
+    makefile = Makefile(make_path, makefile)
+    try:
+        executable = makefile.executable_name()
+    except MakeError as ex:
+        raise CompileError('could not determine the executable name:'
+                           " 'make _exe_name' exited with status {}."
+                           ' Maybe not a JutgeTools Makefile?')
+    outdated = makefile.outdated()
+    return executable, outdated
+
 
 def _parse_args(config):
     def exc():
