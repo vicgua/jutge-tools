@@ -4,10 +4,6 @@ from ._aux.errors import ConfigError
 SUBACTION_NAME = ConfigFile.argname('_arg.subaction')
 
 
-def init_config(config):
-    config.save()
-
-
 def show_config(config):
     settings = config['_arg.settings']
     max_len = max(map(len, settings))
@@ -19,7 +15,7 @@ def show_config(config):
         except KeyError:
             print('{s:>{l}}: No value set'.format(s=s, l=max_len))
         else:
-            print('{s:{l}} = {v}'.format(s=s, l=max_len, v=value))
+            print('{s:<{l}} = {v}'.format(s=s, l=max_len, v=value))
 
 
 def set_config(config):
@@ -45,11 +41,13 @@ def set_config(config):
 
 
 def _parse_args(config):
+    if config['_arg.subaction'] is None:
+        return config['_arg.parser'].print_usage
     return lambda: {
-        'init': init_config,
+        'init': config.save,
         'show': show_config,
         'set': set_config
-    }[config[SUBACTION_NAME]](config)
+    }[config['_arg.subaction']](config)
     # Redirect to the function acording to the subaction
 
 
@@ -109,6 +107,9 @@ def _setup_parser(parent):
     )
     set_subparser.set_defaults(**{SUBACTION_NAME: 'set'})
 
+    config_parser.set_defaults(
+        **{ConfigFile.argname('_arg.parser'): config_parser}
+    )
     config_parser.set_defaults(action=_parse_args)
 
     return config_parser
