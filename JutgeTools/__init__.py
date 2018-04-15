@@ -1,3 +1,3 @@
 __all__ = [
-    'compilef', 'debug', 'download', 'genconfig', 'shrc', 'skel', 'tar', 'test'
+    'compilef', 'config', 'debug', 'download', 'shrc', 'skel', 'tar', 'test'
 ]
