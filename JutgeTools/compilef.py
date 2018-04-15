@@ -9,16 +9,27 @@ from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
 from ._aux.make import Makefile
 
-COMPILE_FLAGS = ['-Wall', '-Wextra', '-Werror', '-Wno-uninitialized',
-                 '-Wno-sign-compare', '-Wshadow']
+COMPILE_FLAGS = [
+    '-Wall', '-Wextra', '-Werror', '-Wno-uninitialized', '-Wno-sign-compare',
+    '-Wshadow'
+]
 
 VALID_STANDARDS = ('c++98', 'c++03', 'c++11', 'c++14')
 
 # Avoid clash with built-in "compile"
-# def compilef(strict=True, debug=True, compiler='g++', make='make',
-            #  standard='c++11', sources=None, flags='', *, config=None):
-def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
-                flags='', sources=None, *, config=None):
+
+
+def compilef(
+    compiler=None,
+    make=None,
+    debug=None,
+    strict=None,
+    standard=None,
+    flags='',
+    sources=None,
+    *,
+    config=None
+):
     """Compile a problem.
         strict: Whether to enable strict checks (-Werror...)
         debug: Whether to enable debug output (-g, -O0...)
@@ -33,21 +44,18 @@ def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
         flags: A string of additional flags to be added before
                 JutgeTools' flags
         """
-    args = [
-        ('compiler.cmd', compiler),
-        ('compiler.make', make),
-        ('compiler.debug', debug),
-        ('compiler.strict', strict),
-        ('compiler.standard', standard),
-        ('compiler.flags', flags)
-    ]
+    args = [('compiler.cmd', compiler), ('compiler.make', make),
+            ('compiler.debug', debug), ('compiler.strict', strict),
+            ('compiler.standard', standard), ('compiler.flags', flags)]
     compiler, make, debug, strict, standard, flags = process_args(config, args)
     print('Compiling...')
     if sources is None:
         sources = []
     if standard not in VALID_STANDARDS:
-        raise ValueError(standard + ' is not a recognised standard. Valid'
-                                    ' values are ' + str(VALID_STANDARDS))
+        raise ValueError(
+            standard + ' is not a recognised standard. Valid'
+            ' values are ' + str(VALID_STANDARDS)
+        )
     flags = shlex.split(flags)
     flags += ['-std=' + str(standard)]
     if debug:
@@ -66,8 +74,7 @@ def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
         try:
             makefile.make_all(env=new_env, verbose=True)
         except subprocess.CalledProcessError as ex:
-            raise CompileError('make exited with status ' +
-                               str(ex.returncode))
+            raise CompileError('make exited with status ' + str(ex.returncode))
 
     else:  # No Makefile
         if not sources:
@@ -76,8 +83,7 @@ def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
             raise CompileError('no C++ files (must end in .cc)')
         output = Path(cwd.name.split('_')[0]).with_suffix('.x')
 
-        sources_subs = map(lambda f: str(Path(f).relative_to(cwd)),
-                            sources)
+        sources_subs = map(lambda f: str(Path(f).relative_to(cwd)), sources)
 
         # compiler_cmd = [compiler, *flags, '-o', str(output),
         #                 *sources_subs]  # (Python >= 3.5)
@@ -88,19 +94,23 @@ def compilef(compiler=None, make=None, debug=None, strict=None, standard=None,
         try:
             subprocess.check_call(compiler_cmd, shell=False)
         except subprocess.CalledProcessError as ex:
-            raise CompileError('compiled exited with status ' +
-                            str(ex.returncode))
+            raise CompileError(
+                'compiled exited with status ' + str(ex.returncode)
+            )
 
     print('Compiled successfully')
+
 
 def make_get_info(make_path, makefile):
     makefile = Makefile(make_path, makefile)
     try:
         executable = makefile.executable_name()
     except MakeError as ex:
-        raise CompileError('could not determine the executable name:'
-                           " 'make _exe_name' exited with status {}."
-                           ' Maybe not a JutgeTools Makefile?')
+        raise CompileError(
+            'could not determine the executable name:'
+            " 'make _exe_name' exited with status {}."
+            ' Maybe not a JutgeTools Makefile?'.format(ex.returncode)
+        )
     outdated = makefile.outdated()
     return executable, outdated
 
@@ -108,11 +118,14 @@ def make_get_info(make_path, makefile):
 def _parse_args(config):
     def exc():
         return compilef(config=config, sources=config['_arg.sources'])
+
     return exc
+
 
 def _setup_parser(parent, global_options):
     compile_parser = parent.add_parser(
-        'compile', aliases=['c'],
+        'compile',
+        aliases=['c'],
         description='Compile the exercise in the current dir.',
         help='compile the current exercise, but do not test it'
     )
@@ -152,12 +165,15 @@ def _setup_parser(parent, global_options):
         '--make',
         dest=ConfigFile.argname('compiler.make'),
         metavar='MAKE',
-        help=('name of the make program (in most systems, the default should'
-              ' be used; Requires GNU make). Default: make')
+        help=(
+            'name of the make program (in most systems, the default should'
+            ' be used; Requires GNU make). Default: make'
+        )
     )
 
     global_options.add_argument(
-        '-std', '--standard',
+        '-std',
+        '--standard',
         choices=VALID_STANDARDS,
         dest=ConfigFile.argname('compiler.standard'),
         help='C++ standard'
@@ -166,14 +182,18 @@ def _setup_parser(parent, global_options):
     debug_group = global_options.add_mutually_exclusive_group()
 
     debug_group.add_argument(
-        '-d', '--debug',
+        '-d',
+        '--debug',
         action='store_true',
         dest=ConfigFile.argname('compiler.debug'),
-        help=('include debugging symbols (and add -O2 and other debug flags)'
-              ' (default)')
+        help=(
+            'include debugging symbols (and add -O2 and other debug flags)'
+            ' (default)'
+        )
     )
     debug_group.add_argument(
-        '-D', '--no-debug',
+        '-D',
+        '--no-debug',
         action='store_false',
         dest=ConfigFile.argname('compiler.debug'),
         help='do not include debugging symbols (and add -DNDEBUG -O2)'

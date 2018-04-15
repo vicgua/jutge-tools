@@ -12,16 +12,21 @@ from ._aux.print_cmd import print_cmd
 
 # Ugly hack to get signal name from signal code
 SIGNALS = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
-     if v.startswith('SIG') and not v.startswith('SIG_'))
+               if v.startswith('SIG') and not v.startswith('SIG_'))
 
-def test(cases=None, compile=None, diff=True, diff_tool=None,
-         verbose=False, make=None, *, config=None):
-    args = [
-        ('test.compile', compile),
-        ('test.diff', diff),
-        ('test.diff tool', diff_tool),
-        ('compiler.make', make)
-    ]
+
+def test(
+    cases=None,
+    compile=None,
+    diff=True,
+    diff_tool=None,
+    verbose=False,
+    make=None,
+    *,
+    config=None
+):
+    args = [('test.compile', compile), ('test.diff', diff),
+            ('test.diff tool', diff_tool), ('compiler.make', make)]
     compile, diff, diff_tool, make = process_args(config, args)
     if diff_tool is None:
         diff_tool = 'diff -y $output $correct'
@@ -41,7 +46,7 @@ def test(cases=None, compile=None, diff=True, diff_tool=None,
             compilef(config=config)
         except CompileError as ex:
             raise TestError(ex) from ex
-    assert(executable.exists())
+    assert executable.exists()
 
     FailedCase = namedtuple('FailedCase', ['case', 'out', 'cor'])
     failed_cases = []
@@ -71,8 +76,10 @@ def test(cases=None, compile=None, diff=True, diff_tool=None,
                 print('-' * 10)
                 print('Further information can be found on the error message')
                 print('=' * 10)
-            msg = ('sample exited with non-zero status, stopping: '
-                + str(ex.returncode))
+            msg = (
+                'sample exited with non-zero status, stopping: ' +
+                str(ex.returncode)
+            )
             try:
                 if ex.returncode < 0:
                     msg += (
@@ -89,16 +96,17 @@ def test(cases=None, compile=None, diff=True, diff_tool=None,
             inp.close()
 
         with corfile.open('rb') as corobj:
-                cor = corobj.read()
+            cor = corobj.read()
         casename = inpfile.with_suffix('').name
         if out == cor:
             print(casename + ' passed')
         else:
             print(casename + ' failed')
-            failed_cases.append(FailedCase(
-                case=inpfile.with_suffix('').name,
-                out=out, cor=cor
-            ))
+            failed_cases.append(
+                FailedCase(
+                    case=inpfile.with_suffix('').name, out=out, cor=cor
+                )
+            )
 
     if not failed_cases:
         return
@@ -134,18 +142,17 @@ def test(cases=None, compile=None, diff=True, diff_tool=None,
 
 def _parse_args(config):
     def exc():
-        return test(
-            cases=config['_arg.cases'],
-            verbose=True,
-            config=config
-        )
+        return test(cases=config['_arg.cases'], verbose=True, config=config)
+
     return exc
+
 
 def _setup_parser(parent):
     test_parser = parent.add_parser(
-        'test', aliases=['t'],
+        'test',
+        aliases=['t'],
         description='Test the exercise in the current dir and show the diff'
-                    ' if a case fails.',
+        ' if a case fails.',
         help='test the current exercise with the test cases'
     )
     test_parser.set_defaults(action=_parse_args)
@@ -155,18 +162,20 @@ def _setup_parser(parent):
         metavar='case',
         nargs='*',
         help='test only this case(s). By default all cases are tested.'
-             ' Specify without extension: `sample1`...'
+        ' Specify without extension: `sample1`...'
     )
 
     compile_group = test_parser.add_mutually_exclusive_group()
     compile_group.add_argument(
-        '-c', '--compile',
+        '-c',
+        '--compile',
         action='store_true',
         dest=ConfigFile.argname('test.compile'),
         help='recompile always (ignored with a Makefile) (default)'
     )
     compile_group.add_argument(
-        '-C', '--no-compile',
+        '-C',
+        '--no-compile',
         action='store_false',
         dest=ConfigFile.argname('test.compile'),
         help='do not recompile. Ignored if there is not an executable'
@@ -201,17 +210,19 @@ def _setup_parser(parent):
 
     test_diff_group = test_parser.add_mutually_exclusive_group()
     test_diff_group.add_argument(
-        '-D', '--no-diff',
+        '-D',
+        '--no-diff',
         action='store_false',
         dest=ConfigFile.argname('test.diff'),
         help='do not display a diff when test cases fail'
     )
     test_diff_group.add_argument(
-        '-d', '--diff-tool',
+        '-d',
+        '--diff-tool',
         dest=ConfigFile.argname('test.diff tool'),
         help='diff tool to use. "$output" and "$correct" will be substituted '
-             ' (they are already quoted).'
-             ' Default: `diff -y $output $correct`'
+        ' (they are already quoted).'
+        ' Default: `diff -y $output $correct`'
     )
 
     return test_parser

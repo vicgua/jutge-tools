@@ -6,10 +6,11 @@ from textwrap import dedent as _dedent
 from .compilef import COMPILE_FLAGS
 from ._aux.config_file import ConfigFile, process_args
 
+
 class Shells(Enum):
     BASH = 1
     TCSH = 2
-    ZSH  = 3
+    ZSH = 3
     FISH = 4
 
     @classmethod
@@ -19,11 +20,13 @@ class Shells(Enum):
     def __str__(self):
         return self.name.lower()
 
+
 def _create_alias(shell, name, action):
     if shell in (Shells.BASH, Shells.ZSH, Shells.FISH):
         return 'alias {n}={a}'.format(n=name, a=shlex.quote(action))
     elif shell == Shells.TCSH:
         return 'alias {n} {a}'.format(n=name, a=action)
+
 
 _SHELL_CONFIGS = {
     Shells.BASH: '~/.bashrc',
@@ -31,6 +34,7 @@ _SHELL_CONFIGS = {
     Shells.ZSH: '~/.zshrc',
     Shells.FISH: '~/.config/fish/config.fish'
 }
+
 
 def _dl_function(shell):
     if shell in (Shells.BASH, Shells.ZSH):
@@ -54,6 +58,7 @@ def _dl_function(shell):
             '''
     return _dedent(s)
 
+
 def _header(shell, comment):
     if shell in (Shells.BASH, Shells.ZSH, Shells.FISH):
         return '### {} ###'.format(comment)
@@ -62,30 +67,44 @@ def _header(shell, comment):
         # colon
         return ':;: {} :;:'.format(comment)
 
-def shrc(shell, quiet=False, p1_alias=None, p2_alias=None,
-         dl_alias=None, compiler=None, *, config=None):
-    args = [
-        ('shrc.p1++ alias', p1_alias),
-        ('shrc.p2++ alias', p2_alias),
-        ('shrc.dl alias', dl_alias),
-        ('compiler.cmd', compiler)
-    ]
+
+def shrc(
+    shell,
+    quiet=False,
+    p1_alias=None,
+    p2_alias=None,
+    dl_alias=None,
+    compiler=None,
+    *,
+    config=None
+):
+    args = [('shrc.p1++ alias', p1_alias), ('shrc.p2++ alias', p2_alias),
+            ('shrc.dl alias', dl_alias), ('compiler.cmd', compiler)]
     p1_alias, p2_alias, dl_alias, compiler = process_args(config, args)
     if not quiet:
-        print('Append the following to {}:'.format(_SHELL_CONFIGS[shell]),
-                file=sys.stderr)
+        print(
+            'Append the following to {}:'.format(_SHELL_CONFIGS[shell]),
+            file=sys.stderr
+        )
     print(_header(shell, 'Jutge tools'))
     if p1_alias is not None:
-        print(_create_alias(shell, p1_alias, compiler + ' ' + COMPILE_FLAGS
-              + '-std=c++98'))
+        print(
+            _create_alias(
+                shell, p1_alias, compiler + ' ' + COMPILE_FLAGS + '-std=c++98'
+            )
+        )
     if p2_alias is not None:
-        print(_create_alias(shell, p2_alias, compiler + ' ' + COMPILE_FLAGS
-                            + '-std=c++11'))
+        print(
+            _create_alias(
+                shell, p2_alias, compiler + ' ' + COMPILE_FLAGS + '-std=c++11'
+            )
+        )
     if dl_alias is not None:
-        print(_dl_function(shell).format(
-            fname=dl_alias,
-            jt=os.path.basename(sys.argv[0])
-        ))
+        print(
+            _dl_function(shell).format(
+                fname=dl_alias, jt=os.path.basename(sys.argv[0])
+            )
+        )
     print()
 
 
@@ -96,19 +115,22 @@ def _parse_args(config):
             quiet=config['_arg.quiet'],
             config=config
         )
+
     return exc
+
 
 def _setup_parser(parent):
     shrc_parser = parent.add_parser(
         'shrc',
         description='Set up shell for development. The output of this command'
-                    ' should be appended to your config file',
+        ' should be appended to your config file',
         help='set up shell for development'
     )
     shrc_parser.set_defaults(action=_parse_args)
 
     shrc_parser.add_argument(
-        '-s', '--shell',
+        '-s',
+        '--shell',
         required=True,
         choices=Shells,
         type=Shells.get,
@@ -117,7 +139,8 @@ def _setup_parser(parent):
     )
 
     shrc_parser.add_argument(
-        '-q', '--quiet',
+        '-q',
+        '--quiet',
         action='store_true',
         dest=ConfigFile.argname('_arg.quiet'),
         help='do not show help to install aliases'
@@ -130,7 +153,7 @@ def _setup_parser(parent):
         default='p1++',
         dest=ConfigFile.argname('shrc.p1++ alias'),
         help='add an alias for p1++ (strict + C++98) with this name.'
-             ' By default, p1++'
+        ' By default, p1++'
     )
     p1_group.add_argument(
         '--no-p1++-alias',
@@ -147,7 +170,7 @@ def _setup_parser(parent):
         default='p2++',
         dest=ConfigFile.argname('shrc.p2++ alias'),
         help='add an alias for p2++ (strict + C++11) with this name.'
-             ' By default, p2++'
+        ' By default, p2++'
     )
     p2_group.add_argument(
         '--no-p2++-alias',

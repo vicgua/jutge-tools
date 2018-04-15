@@ -4,11 +4,12 @@ from pathlib import Path
 from .print_cmd import print_cmd
 from .errors import MakeError
 
+
 class Makefile:
     def __init__(self, make_path, makefile):
         self.make_path = make_path
         self.makefile = makefile
-        assert(makefile.name == 'Makefile')
+        assert makefile.name == 'Makefile'
 
     def make_target(self, target, env=None, verbose=False):
         if target is None:
@@ -24,7 +25,7 @@ class Makefile:
         else:
             proc = subprocess.Popen(cmd, cwd=self.makefile.parent)
         proc.wait()
-        if proc.returncode != 0
+        if proc.returncode != 0:
             raise MakeError(returncode=proc.returncode)
 
     def make_all(self, env=None, verbose=False):

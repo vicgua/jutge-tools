@@ -3,8 +3,10 @@ from ._aux.errors import ConfigError
 
 SUBACTION_NAME = ConfigFile.argname('_arg.subaction')
 
+
 def init_config(config):
     config.save()
+
 
 def show_config(config):
     settings = config['_arg.settings']
@@ -41,6 +43,7 @@ def set_config(config):
             raise ConfigError(err)
     config.save()
 
+
 def _parse_args(config):
     return lambda: {
         'init': init_config,
@@ -48,6 +51,7 @@ def _parse_args(config):
         'set': set_config
     }[config[SUBACTION_NAME]](config)
     # Redirect to the function acording to the subaction
+
 
 def _setup_parser(parent):
     config_parser = parent.add_parser(
@@ -61,14 +65,13 @@ def _setup_parser(parent):
     init_subparser = subparsers.add_parser(
         'init',
         help="generate the config file. If it already exists, it won't be"
-             " changed"
+        " changed"
     )
     init_subparser.set_defaults(**{SUBACTION_NAME: 'init'})
     # This is required so that the subaction gets through to _parse_args
 
     show_subparser = subparsers.add_parser(
-        'show',
-        help='show config file settings'
+        'show', help='show config file settings'
     )
     show_subparser.add_argument(
         ConfigFile.argname('_arg.settings'),
@@ -79,8 +82,7 @@ def _setup_parser(parent):
     show_subparser.set_defaults(**{SUBACTION_NAME: 'show'})
 
     set_subparser = subparsers.add_parser(
-        'set',
-        help='set a config file setting'
+        'set', help='set a config file setting'
     )
     set_subparser.add_argument(
         ConfigFile.argname('_arg.setting'),
@@ -92,17 +94,18 @@ def _setup_parser(parent):
         metavar='value',
         nargs='*',
         help='new value of (setting). If more than one value is provided, a '
-             'list will be created. For boolean variables, {1, true, yes, t,'
-             ' y} are considered True, and {0, false, no, f, n} are False. If'
-             ' --unset, this argument is ignored.'
+        'list will be created. For boolean variables, {1, true, yes, t,'
+        ' y} are considered True, and {0, false, no, f, n} are False. If'
+        ' --unset, this argument is ignored.'
     )
     set_subparser.add_argument(
-        '-u', '--unset',
+        '-u',
+        '--unset',
         action='store_true',
         default=False,
         dest=ConfigFile.argname('_arg.unset'),
         help='delete the variable (the default value, if any,'
-             ' will be used instead)'
+        ' will be used instead)'
     )
     set_subparser.set_defaults(**{SUBACTION_NAME: 'set'})
 

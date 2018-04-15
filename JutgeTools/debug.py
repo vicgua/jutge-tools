@@ -8,11 +8,9 @@ from ._aux.config_file import ConfigFile, process_args
 from ._aux.print_cmd import print_cmd
 from ._aux.make import Makefile
 
+
 def debug(debugger=None, make=None, *, config=None):
-    args = [
-        ('debugger.cmd', debugger),
-        ('compiler.make', make)
-    ]
+    args = [('debugger.cmd', debugger), ('compiler.make', make)]
     debugger, make = process_args(config, args)
     debugger_tpl = Template(debugger)
     cwd = Path.cwd()
@@ -30,7 +28,7 @@ def debug(debugger=None, make=None, *, config=None):
             compilef(config=config)
         except CompileError as ex:
             raise DebugError(ex) from ex
-    assert(executable.exists())
+    assert executable.exists()
 
     debugger_cmd = debugger_tpl.safe_substitute(
         exe=shlex.quote(str(executable))
@@ -39,26 +37,31 @@ def debug(debugger=None, make=None, *, config=None):
     print_cmd(debugger_cmd, shell=True)
     subprocess.call(debugger_cmd, shell=True)
 
+
 def _parse_args(config):
     def exc():
         return debug(config=config)
+
     return exc
+
 
 def _setup_parser(parent):
     debug_parser = parent.add_parser(
-        'debug', aliases=['dbg'],
+        'debug',
+        aliases=['dbg'],
         description='Start a debugger attached to the executable',
         help='run on a debugger'
     )
     debug_parser.set_defaults(action=_parse_args)
 
     debug_parser.add_argument(
-        '-d', '--debugger',
+        '-d',
+        '--debugger',
         dest=ConfigFile.argname('debugger.cmd'),
         metavar='DEBUGGER',
         help='debbugger to be used. "$exe" will be substituted '
-             ' (it is already quoted).'
-             ' Default: `gdb -tui $exe`'
+        ' (it is already quoted).'
+        ' Default: `gdb -tui $exe`'
     )
 
     strict_group = debug_parser.add_mutually_exclusive_group()

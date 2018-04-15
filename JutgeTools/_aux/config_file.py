@@ -37,6 +37,7 @@ CONFIG_VARIABLES = {
     'skel.makefile': (bool, None, False),
 }
 
+
 class ConfigFile:
     def __init__(self, args):
         self.override = args
@@ -169,7 +170,7 @@ class ConfigFile:
                 else:
                     return value, False
             return required_type(value), True
-        except:
+        except BaseException:
             return value, False  # Failed
 
     def __setitem__(self, key, value):
@@ -182,10 +183,10 @@ class ConfigFile:
             if value is not None and not isinstance(value, required_type):
                 raise TypeError(
                     'config value {} must be a {} ({} passed)'.format(
-                        key,
-                        required_type.__qualname__,
+                        key, required_type.__qualname__,
                         type(value).__qualname__
-                    ))
+                    )
+                )
         # Add an override in case there is one already (another option
         # would be to delete the override)
         setattr(self.override, self.argname(key), value)
@@ -209,16 +210,17 @@ class ConfigFile:
             yaml.dump(self.config, f, default_flow_style=False)
 
     def __repr__(self):
-        return '<ConfigFile: override={}, config={}>'.format(self.override,
-            self.config)
+        return '<ConfigFile: override={}, config={}>'.format(
+            self.override, self.config
+        )
 
     def pformat(self, pprinter=None):
         if pprinter is None:
             pprinter = pprint.PrettyPrinter()
         return '<ConfigFile: override={}, config={}>'.format(
-            pprinter.pformat(self.override),
-            pprinter.pformat(self.config)
+            pprinter.pformat(self.override), pprinter.pformat(self.config)
         )
+
 
 def process_arg(config, key, override):
     """Process an argument which depends on a config variable.
@@ -238,6 +240,7 @@ def process_arg(config, key, override):
     if config is not None:
         return config[key]
     return CONFIG_VARIABLES[key][2]  # Default value for 'key'
+
 
 def process_args(config, values):
     """Process arguments which depend on a config variable.

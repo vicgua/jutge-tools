@@ -17,30 +17,31 @@ from ._aux.config_file import ConfigFile
 
 try:
     version = pkg_resources.require("jutge-tools")[0].version
-except:
+except BaseException:
     version = '(could not determine version)'
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Tool for helping with'
-                                                 ' Jutge exercices')
+    parser = argparse.ArgumentParser(
+        description=('Tool for helping with'
+                     ' Jutge exercices')
+    )
     parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s {}'.format(version)
+        '--version', action='version', version='%(prog)s {}'.format(version)
     )
     parser.add_argument(
         '--config',
         help='configuration file. Best used as an alias (see `shrc`)',
         default=None
     )
-    subparsers = parser.add_subparsers(
-        title='actions'
-    )
+    subparsers = parser.add_subparsers(title='actions')
     global_options = parser.add_argument_group(
         title='global options',
-        description=('These options affect more than one command. E.g.:'
-                     ' compile flags are used when "test" and "debug" compile'
-                     ' the problem.')
+        description=(
+            'These options affect more than one command. E.g.:'
+            ' compile flags are used when "test" and "debug" compile'
+            ' the problem.'
+        )
     )
 
     download_parser = download_sp(subparsers)
@@ -70,6 +71,7 @@ def main():
         config_parser.error(ex)
     except ProcessError as ex:
         parser.error(ex)
+
 
 if __name__ == '__main__':
     main()

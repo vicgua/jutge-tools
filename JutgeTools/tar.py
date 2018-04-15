@@ -4,10 +4,11 @@ import subprocess
 from pathlib import Path
 from ._aux.config_file import ConfigFile, process_arg
 from ._aux.errors import TarError as JTTarError  # to avoid confusion with
-                                                 # tarfile.TarError
+# tarfile.TarError
 from ._aux.errors import MakeError
 from ._aux.print_cmd import print_cmd
 from ._aux.make import Makefile
+
 
 def _tar_filter(tarinfo):
     """This function gets a TarInfo object and outputs a filtered one.
@@ -20,6 +21,7 @@ def _tar_filter(tarinfo):
     tarinfo.mode = 0o0644  # rw-r--r--
     return tarinfo
 
+
 def tar(files=None, output=None, make=None, *, config=None):
     make = process_arg(config, 'compiler.make', make)
     if output is None:
@@ -31,8 +33,9 @@ def tar(files=None, output=None, make=None, *, config=None):
             try:
                 makefile.make_target('tar', verbose=True)
             except MakeError as ex:
-                raise JTTarError('make tar failed with status ' +
-                                 str(ex.returncode))
+                raise JTTarError(
+                    'make tar failed with status ' + str(ex.returncode)
+                )
             return
         else:
             raise JTTarError('no files specified and no Makefile found')
@@ -45,6 +48,7 @@ def tar(files=None, output=None, make=None, *, config=None):
     except tarfile.TarError as ex:
         raise JTTarError('tar error: {}'.format(ex))
 
+
 def _parse_args(config):
     def exc():
         return tar(
@@ -52,7 +56,9 @@ def _parse_args(config):
             output=config['_arg.output'],
             config=config
         )
+
     return exc
+
 
 def _setup_parser(parent):
     tar_parser = parent.add_parser(
@@ -63,7 +69,8 @@ def _setup_parser(parent):
     tar_parser.set_defaults(action=_parse_args)
 
     tar_parser.add_argument(
-        '-o', '--output',
+        '-o',
+        '--output',
         dest=ConfigFile.argname('_arg.output'),
         metavar='FILE',
         type=argparse.FileType('wb'),
@@ -75,9 +82,11 @@ def _setup_parser(parent):
         dest=ConfigFile.argname('_arg.file'),
         metavar='FILE',
         nargs='*',
-        help=('file to add to the tar archive. If none are provided, a'
-              ' Makefile should exists which provides `make tar` (such as'
-              ' those created by `jutge-tools skel -mk`). In this case,'
-              ' --output is ignored.')
+        help=(
+            'file to add to the tar archive. If none are provided, a'
+            ' Makefile should exists which provides `make tar` (such as'
+            ' those created by `jutge-tools skel -mk`). In this case,'
+            ' --output is ignored.'
+        )
     )
     return tar_parser
