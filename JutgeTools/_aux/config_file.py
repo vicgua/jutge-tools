@@ -19,7 +19,6 @@ CONFIG_VARIABLES = {
     'debugger.cmd': (str, None, 'gdb -tui $exe'),
 
     # download
-    'download.keep zip': (bool, None, False),
     'download.skel files': (list, None, list),  # If using a callable, it will
     # be called to build the default value
 
