@@ -117,7 +117,7 @@ def download(
         return
 
     print('Creating skel files')
-    skel(exercise, skel_files)
+    skel(exercise, skel_files, config=config)
 
 
 def _print_dest(exc):

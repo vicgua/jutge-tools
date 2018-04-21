@@ -35,6 +35,7 @@ CONFIG_VARIABLES = {
 
     # skel
     'skel.makefile': (bool, None, False),
+    'skel.doxygen': (bool, None, False),
 }
 
 

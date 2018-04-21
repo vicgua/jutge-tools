@@ -4,7 +4,7 @@ import shlex
 import pkg_resources
 from ._aux.errors import SkelError
 from ._aux.file_templates import *
-from ._aux.config_file import ConfigFile, process_arg
+from ._aux.config_file import ConfigFile, process_args
 
 
 def _transform_file_list(l, root, extension=None):
@@ -20,8 +20,11 @@ def _transform_file_list(l, root, extension=None):
     return ' '.join(map(str, map(lambda p: p.relative_to(root), l)))
 
 
-def skel(dirname=None, files=None, makefile=None, *, config=None):
-    makefile = process_arg(config, 'skel.makefile', makefile)
+def skel(
+    dirname=None, files=None, makefile=None, doxygen=None, *, config=None
+):
+    args = [('skel.makefile', makefile), ('skel.doxygen', doxygen)]
+    makefile, doxygen = process_args(config, args)
     if dirname is not None:
         dest = Path.cwd() / dirname
         if dest.exists() and not dest.is_dir():
@@ -65,27 +68,45 @@ def skel(dirname=None, files=None, makefile=None, *, config=None):
             map(shlex.quote, filter(None, sed_pattern.split('\n')))
         )
         makefile_path = dest / 'Makefile'
-        makefile_template = pkg_resources.resource_string(
-            __name__, 'data/Makefile'
-        ).decode('utf-8')
-        makefile_string = makefile_template.format(
-            sed_pattern=make_sed_pattern
-        )
-        with makefile_path.open('w') as fobj:
-            fobj.write(makefile_string)
+        if not makefile_path.exists():
+            makefile_template = pkg_resources.resource_string(
+                __name__, 'data/Makefile'
+            ).decode('utf-8')
+            makefile_string = makefile_template.format(
+                sed_pattern=make_sed_pattern,
+                enable_doxygen='true' if doxygen else 'false'
+            )
+            with makefile_path.open('w') as fobj:
+                fobj.write(makefile_string)
         build_conf_path = dest / 'build_conf.mk'
-        build_conf_template = Template(
-            pkg_resources.resource_string(__name__, 'data/build_conf.mk'
-                                          ).decode('utf-8')
-        )
-        build_conf_string = build_conf_template.substitute({
-            'default_programname': 'program',
-            'default_objects': _transform_file_list(source_files, dest, '.o'),
-            'default_tarname': 'program.tar',
-            'default_tarfiles': _transform_file_list(tar_files, dest)
-        })
-        with build_conf_path.open('w') as fobj:
-            fobj.write(build_conf_string)
+        if not build_conf_path.exists():
+            build_conf_template = Template(
+                pkg_resources.resource_string(__name__, 'data/build_conf.mk'
+                                              ).decode('utf-8')
+            )
+            build_conf_string = build_conf_template.substitute({
+                'default_programname':
+                    'program',
+                'default_objects':
+                    _transform_file_list(source_files, dest, '.o'),
+                'default_tarname':
+                    'program.tar',
+                'default_tarfiles':
+                    _transform_file_list(tar_files, dest)
+            })
+            with build_conf_path.open('w') as fobj:
+                fobj.write(build_conf_string)
+
+    if doxygen:
+        doxygen_path = dest / 'Doxyfile'
+        if not doxygen_path.exists():
+            doxygen_template = Template(
+                pkg_resources.resource_string(__name__,
+                                              'data/Doxyfile').decode('utf-8')
+            )
+            doxygen_string = doxygen_template.substitute(problem_num=dest.name)
+            with doxygen_path.open('w') as fobj:
+                fobj.write(doxygen_string)
 
 
 def _parse_args(config):
@@ -108,9 +129,11 @@ def _setup_parser(parent):
     skel_parser.set_defaults(action=_parse_args)
 
     skel_parser.add_argument(
-        '-d',
+        '-o',
+        '--output',
         '--dest',
         dest=ConfigFile.argname('_arg.dest'),
+        metavar='DEST_DIR',
         help='destination folder'
     )
     skel_parser.add_argument(
@@ -124,6 +147,7 @@ def _setup_parser(parent):
     )
     makefile_group = skel_parser.add_mutually_exclusive_group()
     makefile_group.add_argument(
+        '-M',
         '--no-makefile',
         action='store_false',
         dest=ConfigFile.argname('skel.makefile'),
@@ -133,11 +157,27 @@ def _setup_parser(parent):
         )
     )
     makefile_group.add_argument(
-        '-mk',
+        '-m',
         '--makefile',
         action='store_true',
         dest=ConfigFile.argname('skel.makefile'),
         help='use a Makefile.'
+    )
+
+    doxygen_group = skel_parser.add_mutually_exclusive_group()
+    doxygen_group.add_argument(
+        '-d',
+        '--doxygen',
+        action='store_true',
+        dest=ConfigFile.argname('skel.doxygen'),
+        help='enable Doxygen support'
+    )
+    doxygen_group.add_argument(
+        '-D',
+        '--no-doxygen',
+        action='store_false',
+        dest=ConfigFile.argname('skel.doxygen'),
+        help='disable Doxygen support (default)'
     )
 
     return skel_parser
